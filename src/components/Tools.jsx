@@ -54,7 +54,7 @@ export default function Tools() {
           {tools.map((tool) => (
             <Link
             key={tool.title}
-              href={tool.href} className="group block bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200">
+              to={tool.href} className="group block bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200">
               <div className="text-3xl mb-3">{tool.icon}</div>
               <span className={"text-xs font-semibold px-2 py-0.5 rounded-full " + tool.tagColor}>
                 {tool.tag}
