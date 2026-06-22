@@ -36,22 +36,27 @@ function NumberRow({ label, value, setValue, placeholder = "0", hint = "" }) {
       {hint && <p className="text-xs text-gray-400 mb-1">{hint}</p>}
       <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
         <span className="px-2 text-gray-400 text-sm bg-gray-50 border-r border-gray-200">₹</span>
-        <input type="number" value={value} onChange={(e) => setValue(Number(e.target.value))}
-          className="w-full px-3 py-2 text-sm text-gray-700 focus:outline-none" placeholder={placeholder} />
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-full px-3 py-2 text-sm text-gray-700 focus:outline-none"
+          placeholder={placeholder}
+        />
       </div>
     </div>
   )
 }
 
-function ResultCard({ label, monthly, annual, color = "blue" }) {
-  return (
-    <div className={`bg-${color}-600 rounded-2xl p-6 text-white mb-6`}>
-      <p className={`text-${color}-100 text-sm mb-1`}>{label}</p>
-      <p className="text-4xl font-bold mb-1">₹{format(monthly)}<span className="text-lg font-normal opacity-70"> /mo</span></p>
-      <p className="opacity-70 text-sm">₹{format(annual)} per year</p>
-    </div>
-  )
-}
+// function ResultCard({ label, monthly, annual, color = "blue" }) {
+//   return (
+//     <div className={`bg-${color}-600 rounded-2xl p-6 text-white mb-6`}>
+//       <p className={`text-${color}-100 text-sm mb-1`}>{label}</p>
+//       <p className="text-4xl font-bold mb-1">₹{format(monthly)}<span className="text-lg font-normal opacity-70"> /mo</span></p>
+//       <p className="opacity-70 text-sm">₹{format(annual)} per year</p>
+//     </div>
+//   )
+// }
 
 function CheckRow({ pass, title, detail }) {
   return (
@@ -65,7 +70,7 @@ function CheckRow({ pass, title, detail }) {
   )
 }
 
-function HealthBar({ percentage }) {
+function HealthBar({ percentage, basicPercentOfGross }) {
   const healthy = percentage >= 50
   return (
     <div className={`rounded-2xl p-6 mb-6 border-2 ${healthy ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
@@ -82,6 +87,14 @@ function HealthBar({ percentage }) {
           ? `✅ Good — You're taking home ${percentage}% of gross. Above the standard 50% benchmark.`
           : `⚠️ Low — Only ${percentage}% in-hand. Standard benchmark is 50%+. Review your deductions.`}
       </p>
+      {basicPercentOfGross !== undefined && (
+        <div className="mt-3 pt-3 border-t border-gray-200/60 flex items-center justify-between">
+          <span className="text-xs text-gray-500">Basic Pay (% of Gross)</span>
+          <span className={`text-sm font-bold ${basicPercentOfGross >= 40 ? "text-green-600" : "text-amber-600"}`}>
+            {basicPercentOfGross}% {basicPercentOfGross >= 40 ? "✅" : "⚠️ below 40% norm"}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -157,8 +170,8 @@ function CtcCalculator() {
   const [ctcInput, setCtcInput] = useState(600000)
   const [bonusPercent, setBonusPercent] = useState(15)
   const [professionalTax, setProfessionalTax] = useState(200)
-  const [additionalDeduction1, setAdditionalDeduction1] = useState(0)
-  const [additionalDeduction2, setAdditionalDeduction2] = useState(0)
+  const [additionalDeduction1, setAdditionalDeduction1] = useState("")
+  const [additionalDeduction2, setAdditionalDeduction2] = useState("")
   const [includeEmployerPF, setIncludeEmployerPF] = useState(true)
 
   const annualCtc = period === "annual" ? Number(ctcInput) : Number(ctcInput) * 12
@@ -169,12 +182,15 @@ function CtcCalculator() {
   const employerPF = includeEmployerPF ? basic * 0.12 : 0
   const monthlyEmployeePF = employeePF / 12
   const monthlyEmployerPF = employerPF / 12
-  const monthlyAdditional = Number(additionalDeduction1) + Number(additionalDeduction2)
+  const monthlyAdditional = Number(additionalDeduction1 || 0) + Number(additionalDeduction2 || 0)
   const totalMonthlyDeductions = monthlyEmployeePF + Number(professionalTax) + monthlyAdditional
   const grossMonthly = annualCtc / 12
-  const inHandMonthly = grossMonthly - totalMonthlyDeductions
+  // Take-home base excludes employer PF since that portion of CTC is never paid to the employee
+  const takeHomeBaseMonthly = grossMonthly - monthlyEmployerPF
+  const inHandMonthly = takeHomeBaseMonthly - totalMonthlyDeductions
   const inHandAnnual = inHandMonthly * 12
   const inHandPercentage = grossMonthly > 0 ? Math.round((inHandMonthly / grossMonthly) * 100) : 0
+  const basicPercentOfGross = grossMonthly > 0 ? Math.round(((basic / 12) / grossMonthly) * 100) : 0
 
   const handlePeriodChange = (newPeriod) => {
     if (newPeriod === period) return
@@ -235,7 +251,7 @@ function CtcCalculator() {
         </div>
       </div>
 
-      <HealthBar percentage={inHandPercentage} />
+      <HealthBar percentage={inHandPercentage} basicPercentOfGross={basicPercentOfGross} />
       <BudgetCard monthlyInHand={inHandMonthly} />
     </>
   )

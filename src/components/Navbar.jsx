@@ -31,6 +31,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-3 text-sm text-gray-600">
           <a href="#tools" onClick={() => setMenuOpen(false)}>Tools</a>
           <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
+          <Link to="/blog" onClick={() => setMenuOpen(false)}>Blog</Link>
         </div>
       )}
     </nav>

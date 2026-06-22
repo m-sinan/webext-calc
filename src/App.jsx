@@ -16,6 +16,7 @@ import MarksCalculator from "./pages/MarksCalculator";
 import BlogHome from "./pages/blog/BlogHome";
 import BlogPost from "./pages/blog/BlogPost";
 import { Helmet } from "react-helmet-async";
+import ScrollToTop from "./components/ScrollToTop";
 
 function Home() {
   return (
@@ -35,6 +36,7 @@ function Home() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/emi-calculator" element={<EMICalculator />} />
