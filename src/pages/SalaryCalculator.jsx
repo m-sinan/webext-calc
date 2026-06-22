@@ -48,16 +48,6 @@ function NumberRow({ label, value, setValue, placeholder = "0", hint = "" }) {
   )
 }
 
-// function ResultCard({ label, monthly, annual, color = "blue" }) {
-//   return (
-//     <div className={`bg-${color}-600 rounded-2xl p-6 text-white mb-6`}>
-//       <p className={`text-${color}-100 text-sm mb-1`}>{label}</p>
-//       <p className="text-4xl font-bold mb-1">₹{format(monthly)}<span className="text-lg font-normal opacity-70"> /mo</span></p>
-//       <p className="opacity-70 text-sm">₹{format(annual)} per year</p>
-//     </div>
-//   )
-// }
-
 function CheckRow({ pass, title, detail }) {
   return (
     <div className={`flex items-start gap-3 p-3 rounded-xl border ${pass ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
