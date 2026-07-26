@@ -69,7 +69,7 @@ function EmiTab() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Loan Details</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Enter Loan Details</h2>
         <SliderInput label="Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
         <SliderInput label="Interest Rate (per year)" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
         <SliderInput label="Loan Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
@@ -108,8 +108,8 @@ function EmiTab() {
 
       {/* Amortization Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h3 className="font-bold text-gray-800 mb-1">Amortization Schedule</h3>
-        <p className="text-xs text-gray-400 mb-4">Month by month breakdown of principal vs interest</p>
+        <h3 className="font-bold text-gray-800 mb-1">Loan Amortization Schedule</h3>
+        <p className="text-xs text-gray-400 mb-4">Month by month breakdown of principal vs interest for your loan EMI</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -158,7 +158,6 @@ function PrepaymentTab() {
   const totalWithout = emi * tenure
   const interestWithout = totalWithout - loan
 
-  // With prepayment
   const scheduleWithout = buildSchedule(loan, rate, tenure)
   const balanceAtPrepay = scheduleWithout[prepayMonth - 1]?.balance || loan
   const newPrincipal = Math.max(0, balanceAtPrepay - prepayAmount)
@@ -183,7 +182,7 @@ function PrepaymentTab() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Your Loan Details</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Home Loan Prepayment Calculator</h2>
         <SliderInput label="Original Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
         <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
         <SliderInput label="Original Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
@@ -246,7 +245,6 @@ function ClosureTab() {
   const emi = calcEMI(loan, rate, tenure)
   const totalInterestNormal = emi * tenure - loan
 
-  // Scenario 1: Extra EMI per year
   const extraMonthlyEquivalent = (emi * extraEMIPerYear) / 12
   const newEMI1 = emi + extraMonthlyEquivalent
   const r = rate / 12 / 100
@@ -254,7 +252,6 @@ function ClosureTab() {
   const saving1 = totalInterestNormal - (newEMI1 * newTenure1 - loan)
   const monthsSaved1 = tenure - newTenure1
 
-  // Scenario 2: Annual EMI step-up
   let balance2 = loan
   let months2 = 0
   let totalPaid2 = 0
@@ -318,7 +315,7 @@ function ClosureTab() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Your Loan</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Close Your Loan Faster</h2>
         <SliderInput label="Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
         <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
         <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
@@ -375,7 +372,7 @@ function CompareBanksTab() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Compare Home Loan Rates</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Compare Home Loan EMI Rates — SBI, HDFC, ICICI & More</h2>
         <p className="text-xs text-gray-400 mb-4">Rates as of June 2025 — always confirm with the bank before applying. Rates vary based on credit score and income.</p>
         <SliderInput label="Loan Amount" value={loanAmount} setValue={setLoanAmount} min={500000} max={10000000} step={100000} />
         <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={60} max={360} step={12} prefix="" suffix=" mo" />
@@ -420,7 +417,7 @@ function CompareBanksTab() {
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-        <p className="text-sm font-semibold text-amber-700 mb-2">💡 Tips for Getting the Best Rate</p>
+        <p className="text-sm font-semibold text-amber-700 mb-2">💡 Tips for Getting the Best Home Loan EMI Rate</p>
         <div className="space-y-1 text-xs text-gray-600">
           <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">CIBIL score 750+</span> gets you the best rates — check yours for free on CIBIL website before applying.</span></div>
           <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Salary account bank</span> often gives 0.1–0.25% lower rate to existing customers.</span></div>
@@ -433,15 +430,15 @@ function CompareBanksTab() {
   )
 }
 
-/* ── FAQ & SEO Content ── */
+/* ── FAQ Section ── */
 function FaqSection() {
   const [open, setOpen] = useState(null)
   const faqs = [
-    { q: "What is the EMI for a 20 lakh home loan?", a: "For a ₹20 lakh home loan at 8.5% interest for 20 years, the EMI is approximately ₹17,356 per month. Use the EMI calculator above to adjust for your exact loan amount, rate, and tenure." },
+    { q: "What is the EMI for a 20 lakh home loan?", a: "For a ₹20 lakh home loan at 8.5% interest for 20 years, the EMI is approximately ₹17,356 per month. Use the free EMI calculator above to adjust for your exact loan amount, rate, and tenure." },
     { q: "What happens if I miss an EMI?", a: "Missing an EMI adds a late payment fee (typically 2% of overdue amount), negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days of non-payment. If you're facing difficulty, contact your bank immediately for a restructuring option." },
     { q: "Can I reduce my EMI after taking a loan?", a: "Yes. You can reduce EMI by making a part prepayment (the bank recalculates EMI on reduced principal), switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank if RBI repo rate has fallen." },
     { q: "Should I prepay my home loan or invest in SIP?", a: "If your home loan rate is 8.5% and equity mutual funds historically return 12%, investing in SIP gives a higher return mathematically. However, prepaying gives a guaranteed tax-free return equal to your interest rate. A good strategy: prepay aggressively in early years (interest-heavy) and shift to SIP once loan is below 40% of original amount." },
-    { q: "Can the bank charge prepayment penalty?", a: "No. As per RBI guidelines, banks cannot charge prepayment penalty on floating rate home loans. Fixed rate loans may have a penalty — check your loan agreement. Always demand a letter confirming zero penalty before making a large prepayment." },
+    { q: "Can the bank charge prepayment penalty on home loan?", a: "No. As per RBI guidelines, banks cannot charge prepayment penalty on floating rate home loans. Fixed rate loans may have a penalty — check your loan agreement. Always demand a letter confirming zero penalty before making a large prepayment." },
     { q: "What is the maximum home loan I can get?", a: "Banks typically give up to 80% of property value (LTV ratio). So for a ₹50 lakh property, maximum loan is ₹40 lakh. Your EMI should not exceed 40–50% of your net monthly income as per bank norms. Minimum CIBIL score required is usually 700–750." },
     { q: "What happens to home loan if I lose my job?", a: "Immediately inform your bank. Most banks offer EMI moratorium (pause) for 3–6 months for genuine hardship. You can also use your emergency fund to service EMIs. Loan insurance (if taken) may cover EMIs in case of job loss or disability." },
     { q: "Is home loan interest tax deductible?", a: "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible from taxable income for a self-occupied property. Principal repayment up to ₹1.5 lakh qualifies under Section 80C. This benefit is only available in the Old Tax Regime." },
@@ -449,7 +446,7 @@ function FaqSection() {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 className="font-bold text-gray-900 text-xl mb-4">Frequently Asked Questions</h2>
+      <h2 className="font-bold text-gray-900 text-xl mb-4">Frequently Asked Questions — EMI Calculator</h2>
       <div className="space-y-3">
         {faqs.map((faq, i) => (
           <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
@@ -470,25 +467,30 @@ function FaqSection() {
   )
 }
 
+/* ── SEO Content Section ── */
 function SeoContent() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Home Loan EMI Guide for India</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">EMI Calculator — Complete Loan Guide for India</h2>
       <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is EMI?</h3>
-          <p>EMI (Equated Monthly Installment) is the fixed monthly payment you make to repay your loan. Each EMI has two parts — interest on the outstanding loan, and principal repayment. In early months, most of the EMI goes toward interest. Over time, the principal portion increases.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">What is EMI and How Does an EMI Calculator Work?</h3>
+          <p>EMI (Equated Monthly Installment) is the fixed monthly payment you make to repay your loan. Use our free EMI calculator to instantly calculate monthly EMI for home loan, car loan, or personal loan. Each EMI has two parts — interest on the outstanding loan, and principal repayment. In early months, most of the EMI goes toward interest. Over time, the principal portion increases.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">How is home loan EMI calculated?</h3>
-          <p>EMI = P × r × (1+r)^n / ((1+r)^n - 1), where P is the principal loan amount, r is the monthly interest rate (annual rate ÷ 12 ÷ 100), and n is the number of monthly installments. Our calculator uses this exact formula for accurate results.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">How is Loan EMI Calculated?</h3>
+          <p>EMI = P × r × (1+r)^n / ((1+r)^n - 1), where P is the principal loan amount, r is the monthly interest rate (annual rate ÷ 12 ÷ 100), and n is the number of monthly installments. Our loan EMI calculator uses this exact formula for accurate results for home loan, car loan and personal loan EMI.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is a good EMI to income ratio?</h3>
+          <h3 className="font-semibold text-gray-800 mb-1">Home Loan EMI vs Car Loan EMI vs Personal Loan EMI</h3>
+          <p>Home loan EMI is lowest due to longer tenure (up to 30 years) and lower interest rates (8-9%). Car loan EMI is higher with 7-9 year tenure at 9-12% interest. Personal loan EMI is highest — shortest tenure (1-5 years) and highest rates (12-24%). Use our free EMI calculator India to compare all three instantly and plan your finances better.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">What is a Good EMI to Income Ratio?</h3>
           <p>Banks allow EMI up to 40–50% of your net monthly income. However, financial advisors recommend keeping total EMI (all loans combined) below 35% of your in-hand salary. This leaves enough for living expenses, savings, and emergencies.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Floating vs Fixed interest rate — which is better?</h3>
+          <h3 className="font-semibold text-gray-800 mb-1">Floating vs Fixed Interest Rate — Which is Better?</h3>
           <p>Floating rates (linked to RBI repo rate) are lower than fixed rates and reduce further when RBI cuts rates. Fixed rates give certainty but are typically 1–2% higher. For long tenure loans (15–20 years), floating rate is generally better in India given RBI's rate cycles.</p>
         </div>
       </div>
@@ -502,9 +504,46 @@ function FaqSchema() {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      { "@type": "Question", "name": "What is the EMI for a 20 lakh home loan?", "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month." } },
-      { "@type": "Question", "name": "Can the bank charge prepayment penalty on home loan?", "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India." } },
-      { "@type": "Question", "name": "Should I prepay my home loan or invest in SIP?", "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying is a guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." } },
+      {
+        "@type": "Question",
+        "name": "What is the EMI for a 20 lakh home loan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month. Use our free EMI calculator above to get exact results for your loan amount." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if I miss an EMI?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Missing an EMI adds a late payment fee, negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days. Contact your bank immediately for restructuring options." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I reduce my EMI after taking a loan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can reduce EMI by making a part prepayment, switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank." }
+      },
+      {
+        "@type": "Question",
+        "name": "Should I prepay my home loan or invest in SIP?",
+        "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying gives guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can the bank charge prepayment penalty on home loan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India since 2012." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the maximum home loan I can get?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Banks typically give up to 80% of property value. Your EMI should not exceed 40-50% of your net monthly income. Minimum CIBIL score required is usually 700-750." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens to home loan if I lose my job?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Immediately inform your bank. Most banks offer EMI moratorium for 3-6 months for genuine hardship. Loan insurance may cover EMIs in case of job loss or disability." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is home loan interest tax deductible?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible. Principal repayment up to ₹1.5 lakh qualifies under Section 80C. Only available in Old Tax Regime." }
+      }
     ]
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
@@ -523,16 +562,25 @@ export default function EMICalculator() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
+
       <Helmet>
-        <title>Home Loan EMI Calculator India 2025 — Prepayment, Bank Comparison | WebExt.in</title>
-        <meta name="description" content="Free home loan EMI calculator India. Calculate monthly EMI, prepayment savings, compare bank rates (SBI, HDFC, ICICI), and learn how to close your loan faster. Instant results." />
+        <title>EMI Calculator — Free Loan EMI Calculator India | WebExt.in</title>
+        <meta
+          name="description"
+          content="Free EMI calculator India. Calculate monthly EMI for home loan, car loan and personal loan instantly. Compare bank rates, check prepayment savings. Fast & accurate results."
+        />
+        <link rel="canonical" href="https://www.webext.in/emi-calculator" />
       </Helmet>
+
       <FaqSchema />
 
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-blue-600 text-sm mb-6 inline-block hover:underline">← Back to all tools</a>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Home Loan EMI Calculator</h1>
-        <p className="text-gray-500 mb-6">Calculate EMI, plan prepayments, compare bank rates, and close your loan faster.</p>
+
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          EMI Calculator — Calculate Home Loan, Car & Personal Loan EMI
+        </h1>
+        <p className="text-gray-500 mb-6">Free online loan EMI calculator India. Calculate EMI, plan prepayments, compare bank rates, and close your loan faster.</p>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {TABS.map((t) => (
