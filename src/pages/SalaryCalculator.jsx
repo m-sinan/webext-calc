@@ -99,7 +99,7 @@ function BudgetCard({ monthlyInHand }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h3 className="font-bold text-gray-800 mb-4">50/30/20 Budget Plan</h3>
+      <h3 className="font-bold text-gray-800 mb-4">50/30/20 Budget Plan for Your Take Home Salary</h3>
       <div className="space-y-3 mb-5">
         {[
           { color: "bg-blue-500", label: "Needs — 50%", amount: needs, desc: "Rent, groceries, utilities, EMIs, insurance" },
@@ -175,7 +175,6 @@ function CtcCalculator() {
   const monthlyAdditional = Number(additionalDeduction1 || 0) + Number(additionalDeduction2 || 0)
   const totalMonthlyDeductions = monthlyEmployeePF + Number(professionalTax) + monthlyAdditional
   const grossMonthly = annualCtc / 12
-  // Take-home base excludes employer PF since that portion of CTC is never paid to the employee
   const takeHomeBaseMonthly = grossMonthly - monthlyEmployerPF
   const inHandMonthly = takeHomeBaseMonthly - totalMonthlyDeductions
   const inHandAnnual = inHandMonthly * 12
@@ -193,7 +192,7 @@ function CtcCalculator() {
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800">Your CTC</h2>
+          <h2 className="font-bold text-gray-800">Calculate Take Home Salary from CTC</h2>
           <div className="inline-flex bg-gray-100 rounded-lg p-1">
             {["annual", "monthly"].map((p) => (
               <button key={p} type="button" onClick={() => handlePeriodChange(p)}
@@ -223,8 +222,8 @@ function CtcCalculator() {
 
       <div className="bg-blue-600 rounded-2xl p-6 text-white mb-6">
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div><p className="text-blue-100 text-sm mb-1">Monthly In-Hand</p><p className="text-2xl font-bold">₹{format(inHandMonthly)}</p><p className="text-blue-200 text-xs">₹{format(inHandAnnual)} /yr</p></div>
-          <div><p className="text-blue-100 text-sm mb-1">Gross Monthly</p><p className="text-2xl font-bold">₹{format(grossMonthly)}</p><p className="text-blue-200 text-xs">₹{format(annualCtc)} /yr</p></div>
+          <div><p className="text-blue-100 text-sm mb-1">Monthly In-Hand Salary</p><p className="text-2xl font-bold">₹{format(inHandMonthly)}</p><p className="text-blue-200 text-xs">₹{format(inHandAnnual)} /yr</p></div>
+          <div><p className="text-blue-100 text-sm mb-1">Gross Monthly Salary</p><p className="text-2xl font-bold">₹{format(grossMonthly)}</p><p className="text-blue-200 text-xs">₹{format(annualCtc)} /yr</p></div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -282,7 +281,7 @@ function PayslipChecker() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-1">Enter Your Payslip Figures</h2>
+        <h2 className="font-bold text-gray-800 mb-1">Payslip Checker — Verify Your Monthly Salary</h2>
         <p className="text-xs text-gray-400 mb-4">Use the actual monthly figures from your payslip, not CTC.</p>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Earnings</p>
         <NumberRow label="Basic Salary" value={basic} setValue={setBasic} />
@@ -364,13 +363,13 @@ function IncrementCalculator() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Your Increment Details</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Salary Increment & Hike Calculator</h2>
         <SliderInput label="Current Annual CTC" value={currentCtc} setValue={setCurrentCtc} min={100000} max={5000000} step={10000} />
         <SliderInput label="Hike Percentage" value={hikePercent} setValue={setHikePercent} min={1} max={100} step={1} prefix="" suffix="%" />
       </div>
 
       <div className="bg-blue-600 rounded-2xl p-6 text-white mb-6">
-        <p className="text-blue-100 text-sm mb-1">New Annual CTC</p>
+        <p className="text-blue-100 text-sm mb-1">New Annual CTC After Hike</p>
         <p className="text-4xl font-bold mb-4">₹{format(newCtc)}</p>
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -388,7 +387,7 @@ function IncrementCalculator() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h3 className="font-bold text-gray-800 mb-4">Estimated In-Hand Change</h3>
+        <h3 className="font-bold text-gray-800 mb-4">Estimated In-Hand Salary Change</h3>
         <p className="text-xs text-gray-400 mb-4">Approximate estimate assuming ~70% of CTC as in-hand after deductions.</p>
         <div className="space-y-3">
           {[
@@ -440,7 +439,7 @@ function GratuityCalculator() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Gratuity Details</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Gratuity Calculator India — Check Your Eligibility</h2>
         <SliderInput label="Last Drawn Basic + DA (Monthly)" value={basicDa} setValue={setBasicDa} min={5000} max={300000} step={1000} />
         <SliderInput label="Years of Service" value={years} setValue={setYears} min={1} max={40} step={1} prefix="" suffix=" yrs" />
         <div className="mt-2">
@@ -464,7 +463,7 @@ function GratuityCalculator() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h3 className="font-bold text-gray-800 mb-3">How Gratuity is Calculated</h3>
+        <h3 className="font-bold text-gray-800 mb-3">How Gratuity is Calculated in India</h3>
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
           <p className="text-sm font-semibold text-gray-700 mb-2">Formula (Gratuity Act covered employers)</p>
           <p className="text-sm text-gray-600 font-mono bg-white rounded-lg p-3 border border-gray-100">
@@ -495,7 +494,6 @@ function IncomeTaxCalculator() {
 
   const standardDeduction = 50000
 
-  // Old regime tax calculation
   const oldDeductions = Math.min(section80C, 150000) + standardDeduction + hraExemption + Math.min(homeLoanInterest, 200000) + Math.min(npsContribution, 50000)
   const oldTaxableIncome = Math.max(0, annualIncome - oldDeductions)
 
@@ -512,7 +510,6 @@ function IncomeTaxCalculator() {
   const oldCess = oldTax * 0.04
   const oldTotalTax = oldTax + oldCess
 
-  // New regime tax calculation
   const newTaxableIncome = Math.max(0, annualIncome - standardDeduction)
 
   const calcNewTax = (income) => {
@@ -536,7 +533,7 @@ function IncomeTaxCalculator() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Your Income & Deductions</h2>
+        <h2 className="font-bold text-gray-800 mb-4">Income Tax Calculator — New vs Old Regime FY 2025-26</h2>
         <SliderInput label="Annual Gross Income (CTC)" value={annualIncome} setValue={setAnnualIncome} min={300000} max={5000000} step={50000} />
         <p className="text-xs text-gray-400 -mt-3 mb-5">Standard deduction of ₹50,000 applied automatically in both regimes.</p>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Old Regime Deductions Only</p>
@@ -555,7 +552,7 @@ function IncomeTaxCalculator() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h3 className="font-bold text-gray-800 mb-4">Side by Side Comparison</h3>
+        <h3 className="font-bold text-gray-800 mb-4">New Regime vs Old Regime — Side by Side Comparison</h3>
         <div className="grid grid-cols-2 gap-4 mb-4">
           {[
             { label: "Old Regime", taxable: oldTaxableIncome, tax: oldTaxBeforeRebate, rebate: oldRebate, final: oldTotalTax, wins: oldWins },
@@ -576,7 +573,7 @@ function IncomeTaxCalculator() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h3 className="font-bold text-gray-800 mb-3">New Regime Tax Slabs (FY 2024-25)</h3>
+        <h3 className="font-bold text-gray-800 mb-3">New Regime Income Tax Slabs FY 2025-26</h3>
         <div className="space-y-2">
           {[
             { range: "Up to ₹3,00,000", rate: "0%", color: "text-green-600" },
@@ -598,32 +595,126 @@ function IncomeTaxCalculator() {
   )
 }
 
+/* ── FAQ Section ── */
+
+function FaqSection() {
+  const [open, setOpen] = useState(null)
+  const faqs = [
+    { q: "How is in-hand salary calculated from CTC?", a: "In-hand salary = CTC minus employer PF (12% of basic) minus employee PF (12% of basic) minus professional tax minus any other deductions. Typically, in-hand salary is 70-75% of CTC. Use our free salary calculator India to get an accurate estimate." },
+    { q: "What is the difference between CTC and in-hand salary?", a: "CTC (Cost to Company) is the total amount a company spends on an employee annually, including PF, gratuity, insurance etc. In-hand salary is what you actually receive in your bank account each month after all deductions." },
+    { q: "How much take home salary for 6 LPA in India?", a: "For a 6 LPA CTC, your monthly take home salary is approximately ₹42,000 to ₹45,000 depending on your professional tax, PF structure, and bonus component. Use our take home salary calculator for exact figures." },
+    { q: "What is professional tax and who pays it?", a: "Professional tax is a state-level tax deducted from your salary every month. It varies by state — Karnataka charges ₹200/month for salaries above ₹25,000. Some states like Haryana don't have professional tax at all." },
+    { q: "Which is better — New Regime or Old Regime income tax?", a: "New Regime is better if your total deductions (HRA + 80C + home loan + NPS) are below ₹3.75 lakhs. Old Regime wins when you have large deductions like home loan interest and HRA in metros. Use our income tax calculator to compare both regimes instantly." },
+    { q: "What is gratuity and when am I eligible?", a: "Gratuity is a lump-sum payment from your employer when you leave after 5+ years of continuous service. Formula: (Basic + DA) × 15 × Years ÷ 26. Maximum tax-free gratuity is ₹20 lakhs." },
+    { q: "What is a good salary hike percentage in India?", a: "Average salary hike in India is 8-12% annually. Above 15% is considered a good hike. Job switches typically fetch 30-50% hike, which is why changing jobs is the fastest way to grow salary in India." },
+    { q: "How much of my salary should I save each month?", a: "Follow the 50/30/20 rule — 50% for needs (rent, EMI, groceries), 30% for wants (dining, entertainment), and 20% for savings and investments (SIP, PPF, emergency fund). Minimum monthly SIP should be 10% of in-hand salary." },
+  ]
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 className="font-bold text-gray-900 text-xl mb-4">Frequently Asked Questions — Salary Calculator India</h2>
+      <div className="space-y-3">
+        {faqs.map((faq, i) => (
+          <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
+            <button type="button" onClick={() => setOpen(open === i ? null : i)}
+              className="w-full text-left px-4 py-3 flex justify-between items-center hover:bg-gray-50 transition">
+              <span className="text-sm font-semibold text-gray-800 pr-4">{faq.q}</span>
+              <span className="text-blue-600 text-lg flex-shrink-0">{open === i ? "−" : "+"}</span>
+            </button>
+            {open === i && (
+              <div className="px-4 pb-4">
+                <p className="text-sm text-gray-500 leading-relaxed">{faq.a}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /* ── SEO Content ── */
 
 function SeoContent() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Guide to Your Salary in India</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Salary Calculator India — Complete Guide to CTC, In-Hand & Tax</h2>
       <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is in-hand salary?</h3>
-          <p>In-hand salary is the amount credited to your bank account after PF, professional tax, and other deductions from your gross salary. It is always lower than your CTC.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">What is In-Hand Salary and How to Calculate It?</h3>
+          <p>In-hand salary (take home salary) is the amount credited to your bank account after PF, professional tax, and income tax deductions from your gross salary. Use our free salary calculator India to instantly calculate your monthly in-hand salary from CTC. It is always lower than your CTC — typically 70-75% of your total package.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is gratuity and when do you get it?</h3>
-          <p>Gratuity is a lump-sum payment by your employer when you leave after 5+ years of continuous service. It is calculated as (Basic + DA) × 15 × Years ÷ 26. Tax-free up to ₹20 lakhs.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">How is Monthly Salary Calculated from Annual CTC?</h3>
+          <p>Monthly salary = Annual CTC ÷ 12. But your monthly in-hand is lower because of deductions like Employee PF (12% of basic), Professional Tax (up to ₹200/month), and TDS on salary. Our take home salary calculator shows you the exact breakdown with all deductions clearly listed.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">New Regime vs Old Regime — which is better?</h3>
-          <p>New Regime has lower slab rates but removes most deductions. Old Regime allows HRA, 80C, home loan interest deductions. If your total deductions exceed ₹3.75 lakhs, the Old Regime usually wins.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">New Regime vs Old Regime — Which Tax Regime is Better?</h3>
+          <p>New Regime has lower slab rates but removes most deductions. Old Regime allows HRA, 80C, home loan interest deductions. If your total deductions exceed ₹3.75 lakhs, the Old Regime usually saves more tax. Use our income tax calculator above to compare both regimes for your exact income.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is a good hike percentage in India?</h3>
-          <p>Average hike in India is 8–12% annually. Anything above 15% is above average. Job switches typically fetch 30–50% hike, which is why changing jobs is often the fastest way to grow salary in India.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">What is Gratuity and When Do You Get It?</h3>
+          <p>Gratuity is a lump-sum payment by your employer when you leave after 5+ years of continuous service. It is calculated as (Basic + DA) × 15 × Years ÷ 26. Tax-free up to ₹20 lakhs. Use our gratuity calculator India to check your exact eligibility and amount.</p>
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">What is a Good Salary Hike Percentage in India?</h3>
+          <p>Average hike in India is 8–12% annually. Anything above 15% is above average. Job switches typically fetch 30–50% hike, which is why changing jobs is often the fastest way to grow your salary in India. Use our salary increment calculator to see exactly how much your take home salary increases.</p>
         </div>
       </div>
     </div>
   )
+}
+
+/* ── FAQ Schema ── */
+
+function FaqSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How is in-hand salary calculated from CTC?",
+        "acceptedAnswer": { "@type": "Answer", "text": "In-hand salary = CTC minus employer PF (12% of basic) minus employee PF (12% of basic) minus professional tax minus other deductions. Typically in-hand is 70-75% of CTC." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between CTC and in-hand salary?",
+        "acceptedAnswer": { "@type": "Answer", "text": "CTC is the total cost to company including PF, gratuity, insurance. In-hand salary is what you actually receive in your bank account after all deductions." }
+      },
+      {
+        "@type": "Question",
+        "name": "How much take home salary for 6 LPA in India?",
+        "acceptedAnswer": { "@type": "Answer", "text": "For 6 LPA CTC, monthly take home salary is approximately ₹42,000 to ₹45,000 depending on professional tax, PF structure, and bonus component." }
+      },
+      {
+        "@type": "Question",
+        "name": "Which is better — New Regime or Old Regime income tax?",
+        "acceptedAnswer": { "@type": "Answer", "text": "New Regime is better if total deductions are below ₹3.75 lakhs. Old Regime wins when you have large deductions like home loan interest and HRA in metros." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is gratuity and when am I eligible?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Gratuity is a lump-sum payment from employer after 5+ years of service. Formula: (Basic + DA) × 15 × Years ÷ 26. Maximum tax-free gratuity is ₹20 lakhs." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a good salary hike percentage in India?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Average hike in India is 8-12%. Above 15% is good. Job switches typically give 30-50% hike." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is professional tax in India?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Professional tax is a state-level tax deducted from salary monthly. Karnataka charges ₹200/month for salaries above ₹25,000. Some states like Haryana have no professional tax." }
+      },
+      {
+        "@type": "Question",
+        "name": "How much of my salary should I save each month?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Follow the 50/30/20 rule — 50% for needs, 30% for wants, and 20% for savings and investments. Minimum monthly SIP should be 10% of in-hand salary." }
+      }
+    ]
+  }
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 }
 
 /* ── Main Export ── */
@@ -642,16 +733,21 @@ export default function SalaryCalculator() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <Helmet>
-        <title>Salary Calculator India 2025 — In-Hand, Gratuity, Tax, Increment | WebExt.in</title>
-        <meta name="description" content="Complete salary calculator for India — calculate in-hand salary from CTC, check payslip, gratuity, income tax (new vs old regime), and increment hike. Free, instant, no signup." />
+        <title>Salary Calculator India — Take Home Salary, CTC, Tax & Gratuity | WebExt.in</title>
+        <meta
+          name="description"
+          content="Free salary calculator India. Calculate take home salary from CTC, check payslip, compare new vs old tax regime, gratuity eligibility and salary hike. Instant & accurate results."
+        />
+        <link rel="canonical" href="https://www.webext.in/salary-calculator" />
       </Helmet>
+
+      <FaqSchema />
 
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-blue-600 text-sm mb-6 inline-block hover:underline">← Back to all tools</a>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Salary Calculator India</h1>
-        <p className="text-gray-500 mb-6">In-hand salary, payslip checker, gratuity, income tax, and increment calculator — all in one place.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Salary Calculator India — Take Home, Tax & Gratuity</h1>
+        <p className="text-gray-500 mb-6">Free online salary calculator India. Calculate in-hand salary from CTC, check payslip, compare income tax regimes, gratuity and increment — all in one place.</p>
 
-        {/* Tab bar */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
           {TABS.map((t) => (
             <button key={t.id} type="button" onClick={() => setTab(t.id)}
@@ -667,6 +763,7 @@ export default function SalaryCalculator() {
         {tab === "gratuity" && <GratuityCalculator />}
         {tab === "tax" && <IncomeTaxCalculator />}
 
+        <FaqSection />
         <SeoContent />
       </div>
     </div>
