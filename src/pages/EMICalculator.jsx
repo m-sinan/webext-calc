@@ -674,19 +674,47 @@ function SeoContent() {
   )
 }
 
-/* ── FAQ Schema ── */
-function FaqSchema() {
+/* ── JSON-LD Schema: WebApplication + FAQPage (single @graph) ── */
+function PageSchema() {
   const schema = {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      { "@type": "Question", "name": "How is EMI calculated manually?", "acceptedAnswer": { "@type": "Answer", "text": "EMI is calculated using the formula EMI = P × r × (1+r)^n / ((1+r)^n − 1), where P is the principal, r is the monthly interest rate, and n is the number of monthly instalments." } },
-      { "@type": "Question", "name": "Does pre-payment reduce EMI or loan tenure?", "acceptedAnswer": { "@type": "Answer", "text": "Most lenders let you choose: reduce the tenure (EMI stays the same, loan closes earlier) or reduce the EMI (tenure stays the same, each instalment is smaller). Reducing tenure usually saves more total interest." } },
-      { "@type": "Question", "name": "What is the formula for calculating loan EMI?", "acceptedAnswer": { "@type": "Answer", "text": "The EMI formula is EMI = P × r × (1+r)^n / ((1+r)^n − 1), where P is the principal, r is the monthly interest rate, and n is the loan tenure in months." } },
-      { "@type": "Question", "name": "What is the EMI for a 20 lakh home loan?", "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month." } },
-      { "@type": "Question", "name": "Can the bank charge prepayment penalty on home loan?", "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India since 2012." } },
-      { "@type": "Question", "name": "Should I prepay my home loan or invest in SIP?", "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying gives guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." } },
-      { "@type": "Question", "name": "Is home loan interest tax deductible?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible. Principal up to ₹1.5 lakh under Section 80C. Only in Old Tax Regime." } },
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://www.webext.in/emi-calculator#webapp",
+        "name": "WebExt EMI Calculator",
+        "url": "https://www.webext.in/emi-calculator",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "All",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
+        },
+        "description": "Calculate monthly loan EMI, interest, and repayment schedules instantly for home, car, and personal loans in India."
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://www.webext.in/emi-calculator#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How is EMI calculated manually?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "EMI is calculated using the formula: P x R x (1+R)^N / [(1+R)^N - 1], where P is Principal loan amount, R is monthly interest rate, and N is tenure in months."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does pre-payment reduce EMI or loan tenure?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Making a loan pre-payment reduces your principal balance. You can choose to either lower your monthly EMI amount or shorten your overall loan tenure."
+            }
+          }
+        ]
+      }
     ]
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
@@ -710,7 +738,7 @@ export default function EMICalculator() {
         <meta name="description" content="Calculate monthly loan EMI, total interest, and repayment schedules instantly for home, car, and personal loans in India. 100% free with no login required." />
         <link rel="canonical" href="https://www.webext.in/emi-calculator" />
       </Helmet>
-      <FaqSchema />
+      <PageSchema />
 
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-blue-600 text-sm mb-6 inline-block hover:underline">← Back to all tools</a>
