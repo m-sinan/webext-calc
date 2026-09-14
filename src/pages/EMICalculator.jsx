@@ -674,14 +674,13 @@ function SeoContent() {
   )
 }
 
-/* ── JSON-LD Schema: WebApplication + FAQPage (single @graph) ── */
+/* ── JSON-LD Schema: SoftwareApplication + FAQPage (single @graph) ── */
 function PageSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "WebApplication",
-        "@id": "https://www.webext.in/emi-calculator#webapp",
+        "@type": "SoftwareApplication",
         "name": "WebExt EMI Calculator",
         "url": "https://www.webext.in/emi-calculator",
         "applicationCategory": "FinanceApplication",
@@ -690,12 +689,10 @@ function PageSchema() {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "INR"
-        },
-        "description": "Calculate monthly loan EMI, interest, and repayment schedules instantly for home, car, and personal loans in India."
+        }
       },
       {
         "@type": "FAQPage",
-        "@id": "https://www.webext.in/emi-calculator#faq",
         "mainEntity": [
           {
             "@type": "Question",
