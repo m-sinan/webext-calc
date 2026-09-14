@@ -582,6 +582,9 @@ function CompareBanksTab() {
 function FaqSection() {
   const [open, setOpen] = useState(null)
   const faqs = [
+    { q: "How is EMI calculated manually?", a: "EMI is calculated using the formula EMI = P × r × (1+r)^n / ((1+r)^n − 1), where P is the principal loan amount, r is the monthly interest rate (annual rate ÷ 12 ÷ 100), and n is the total number of monthly instalments. For example, on a ₹25 lakh loan at 8.5% for 20 years, r = 0.007083 and n = 240 — plugging these into the formula gives a monthly EMI of roughly ₹21,696. You can verify any figure by working through the formula step by step, or use the EMI calculator above to get the result instantly." },
+    { q: "Does pre-payment reduce EMI or loan tenure?", a: "It depends on the option you choose with your bank. Most lenders let you pick: reduce the loan tenure (your EMI stays the same, but the loan closes earlier) or reduce the EMI (your tenure stays the same, but each future instalment is smaller). Reducing tenure usually saves more total interest because the principal is paid off faster. Use the Prepayment tab above to compare both outcomes for your exact loan." },
+    { q: "What is the formula for calculating loan EMI?", a: "The standard EMI calculation formula used by Indian banks and NBFCs is: EMI = P × r × (1+r)^n / ((1+r)^n − 1). Here, P is the principal (loan amount), r is the monthly interest rate, and n is the loan tenure in months. This is the same EMI calculation formula our home loan EMI calculator, car loan EMI calculator, and personal loan EMI calculator all use under the hood." },
     { q: "What is the EMI for a 20 lakh home loan?", a: "For a ₹20 lakh home loan at 8.5% interest for 20 years, the EMI is approximately ₹17,356 per month. Use the free EMI calculator above to adjust for your exact loan amount, rate, and tenure." },
     { q: "What happens if I miss an EMI?", a: "Missing an EMI adds a late payment fee (typically 2% of overdue amount), negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days. Contact your bank immediately for a restructuring option." },
     { q: "Can I reduce my EMI after taking a loan?", a: "Yes. You can reduce EMI by making a part prepayment, switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank if RBI repo rate has fallen." },
@@ -618,31 +621,56 @@ function FaqSection() {
 /* ── SEO Content ── */
 function SeoContent() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">EMI Calculator — Complete Loan Guide for India</h2>
-      <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is EMI and How Does an EMI Calculator Work?</h3>
-          <p>EMI (Equated Monthly Installment) is the fixed monthly payment you make to repay your loan. Use our free EMI calculator to instantly calculate monthly EMI for home loan, car loan, or personal loan. Each EMI has two parts — interest on outstanding loan, and principal repayment.</p>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">How is Loan EMI Calculated?</h3>
-          <p>EMI = P × r × (1+r)^n / ((1+r)^n - 1), where P is principal, r is monthly interest rate, and n is number of months. Our loan EMI calculator uses this exact formula for home loan, car loan and personal loan EMI.</p>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Home Loan EMI vs Car Loan EMI vs Personal Loan EMI</h3>
-          <p>Home loan EMI is lowest — longer tenure (up to 30 years), lower rates (8-9%). Car loan EMI is moderate — 5-7 year tenure at 9-12%. Personal loan EMI is highest — shortest tenure (1-5 years), rates 10-24%. Use our free EMI calculator to compare all three instantly.</p>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is a Good EMI to Income Ratio?</h3>
-          <p>Banks allow EMI up to 40–50% of net monthly income. Financial advisors recommend keeping all EMIs below 35% of in-hand salary, leaving enough for living expenses, savings, and emergencies.</p>
-        </div>
-        <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Floating vs Fixed Interest Rate — Which is Better?</h3>
-          <p>Floating rates (linked to RBI repo rate) are lower and reduce when RBI cuts rates. Fixed rates give certainty but are 1–2% higher. For long tenure loans (15–20 years), floating rate is generally better in India.</p>
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">EMI Calculation Formula</h2>
+        <div className="space-y-3 text-sm text-gray-500 leading-relaxed">
+          <p>Every EMI calculator — whether for a home loan, car loan, or personal loan — uses the same underlying EMI calculation formula:</p>
+          <p className="font-mono text-gray-700 bg-gray-50 rounded-lg px-4 py-3 text-center text-sm">
+            EMI = P × r × (1 + r)<sup>n</sup> / ((1 + r)<sup>n</sup> − 1)
+          </p>
+          <p>Where <span className="font-semibold text-gray-700">P</span> is the principal loan amount, <span className="font-semibold text-gray-700">r</span> is the monthly interest rate (annual rate ÷ 12 ÷ 100), and <span className="font-semibold text-gray-700">n</span> is the loan tenure in months. Each EMI instalment is a mix of interest and principal — in the early months, a larger share goes toward interest, and this gradually shifts toward principal as the balance reduces.</p>
         </div>
       </div>
-    </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Home Loan EMI Calculator</h2>
+        <div className="space-y-3 text-sm text-gray-500 leading-relaxed">
+          <p>Our home loan EMI calculator helps you work out the monthly instalment on a housing loan of up to ₹5 crore, with tenures stretching as long as 30 years. Home loans typically carry the lowest interest rates of any retail loan in India — usually in the 8–9% range — because they're secured against the property.</p>
+          <p>Enter your loan amount, expected interest rate, and tenure in the calculator above to instantly see your monthly EMI, total interest payable, and a full amortization schedule. You can also compare current home loan rates across major banks in the Compare Banks tab, or model how prepayments shorten your tenure in the Prepayment tab.</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Car Loan EMI Calculator</h2>
+        <div className="space-y-3 text-sm text-gray-500 leading-relaxed">
+          <p>Use the car loan EMI calculator to estimate your monthly payment on a new or used vehicle loan. Car loans usually run for 5–7 years at interest rates between 9% and 12%, and most banks finance up to 85–90% of the on-road price for new cars.</p>
+          <p>Switch to the "Car Loan" option in the calculator above to see EMI, interest, and total repayment for your vehicle loan amount, or check the Compare Banks tab to line up rates from SBI, HDFC, ICICI, and others side by side.</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Personal Loan EMI Calculator</h2>
+        <div className="space-y-3 text-sm text-gray-500 leading-relaxed">
+          <p>The personal loan EMI calculator is built for unsecured loans with shorter tenures — typically 1 to 5 years — and higher interest rates, usually 10–24% depending on your credit score and income profile. Because personal loans need no collateral, lenders price them higher than home or car loans.</p>
+          <p>Select "Personal Loan" in the calculator above to see your exact monthly EMI and total interest outgo, and use the Close Faster tab to see how extra payments or an annual step-up in EMI can help you clear the loan sooner.</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">More on EMI &amp; Loan Planning</h2>
+        <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1">What is a Good EMI to Income Ratio?</h3>
+            <p>Banks allow EMI up to 40–50% of net monthly income. Financial advisors recommend keeping all EMIs below 35% of in-hand salary, leaving enough for living expenses, savings, and emergencies.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-1">Floating vs Fixed Interest Rate — Which is Better?</h3>
+            <p>Floating rates (linked to RBI repo rate) are lower and reduce when RBI cuts rates. Fixed rates give certainty but are 1–2% higher. For long tenure loans (15–20 years), floating rate is generally better in India.</p>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -652,6 +680,9 @@ function FaqSchema() {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
+      { "@type": "Question", "name": "How is EMI calculated manually?", "acceptedAnswer": { "@type": "Answer", "text": "EMI is calculated using the formula EMI = P × r × (1+r)^n / ((1+r)^n − 1), where P is the principal, r is the monthly interest rate, and n is the number of monthly instalments." } },
+      { "@type": "Question", "name": "Does pre-payment reduce EMI or loan tenure?", "acceptedAnswer": { "@type": "Answer", "text": "Most lenders let you choose: reduce the tenure (EMI stays the same, loan closes earlier) or reduce the EMI (tenure stays the same, each instalment is smaller). Reducing tenure usually saves more total interest." } },
+      { "@type": "Question", "name": "What is the formula for calculating loan EMI?", "acceptedAnswer": { "@type": "Answer", "text": "The EMI formula is EMI = P × r × (1+r)^n / ((1+r)^n − 1), where P is the principal, r is the monthly interest rate, and n is the loan tenure in months." } },
       { "@type": "Question", "name": "What is the EMI for a 20 lakh home loan?", "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month." } },
       { "@type": "Question", "name": "Can the bank charge prepayment penalty on home loan?", "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India since 2012." } },
       { "@type": "Question", "name": "Should I prepay my home loan or invest in SIP?", "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying gives guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." } },
@@ -675,8 +706,8 @@ export default function EMICalculator() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <Helmet>
-        <title>EMI Calculator — Free Loan EMI Calculator India | WebExt.in</title>
-        <meta name="description" content="Free EMI calculator India. Calculate monthly EMI for home loan, car loan and personal loan instantly. Compare bank rates, check prepayment savings. Fast & accurate results." />
+        <title>Free EMI Calculator India - Calculate Home, Car & Personal Loan EMI | WebExt</title>
+        <meta name="description" content="Calculate monthly loan EMI, total interest, and repayment schedules instantly for home, car, and personal loans in India. 100% free with no login required." />
         <link rel="canonical" href="https://www.webext.in/emi-calculator" />
       </Helmet>
       <FaqSchema />
@@ -700,8 +731,8 @@ export default function EMICalculator() {
         {tab === "closure" && <ClosureTab />}
         {tab === "banks" && <CompareBanksTab />}
 
-        <FaqSection />
         <SeoContent />
+        <FaqSection />
       </div>
     </div>
   )
