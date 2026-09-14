@@ -674,46 +674,46 @@ function SeoContent() {
   )
 }
 
-/* ── JSON-LD Schema: SoftwareApplication + FAQPage (single @graph) ── */
+/* ── JSON-LD Schema: WebApplication + FAQPage (single @graph) ── */
 function PageSchema() {
   const schema = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "SoftwareApplication",
-        "name": "WebExt EMI Calculator",
-        "url": "https://www.webext.in/emi-calculator",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "All",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "INR"
-        }
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "How is EMI calculated manually?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "EMI is calculated using the formula: P x R x (1+R)^N / [(1+R)^N - 1], where P is Principal loan amount, R is monthly interest rate, and N is tenure in months."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Does pre-payment reduce EMI or loan tenure?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Making a loan pre-payment reduces your principal balance. You can choose to either lower your monthly EMI amount or shorten your overall loan tenure."
-            }
-          }
-        ]
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "WebExt EMI Calculator",
+      "url": "https://www.webext.in/emi-calculator",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
       }
-    ]
-  }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How is EMI calculated manually?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "EMI is calculated using the formula: P x R x (1+R)^N / [(1+R)^N - 1], where P is Principal loan amount, R is monthly interest rate, and N is tenure in months."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does pre-payment reduce EMI or loan tenure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Making a loan pre-payment reduces your principal balance. You can choose to either lower your monthly EMI amount or shorten your overall loan tenure."
+          }
+        }
+      ]
+    }
+  ]
+}
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 }
 
