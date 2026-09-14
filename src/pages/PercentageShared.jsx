@@ -8,6 +8,15 @@ export const format = (num) => {
   return parseFloat(n.toFixed(4)).toLocaleString("en-IN")
 }
 
+/* ── NEW: warning box shown instead of a misleading result ── */
+export function WarningBox({ message }) {
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-2">
+      <p className="text-red-600 text-sm font-semibold">{message}</p>
+    </div>
+  )
+}
+
 export function ResultBox({ label, value, color = "blue" }) {
   const colors = {
     blue: "bg-blue-600",
@@ -24,13 +33,17 @@ export function ResultBox({ label, value, color = "blue" }) {
   )
 }
 
+/* ── UPDATED: id/htmlFor now link label to input for accessibility ── */
+let inputBoxCounter = 0
 export function InputBox({ label, value, setValue, prefix = "", suffix = "", placeholder = "0" }) {
+  const [id] = useState(() => `inp-${label.replace(/\s+/g, "-").toLowerCase()}-${inputBoxCounter++}`)
   return (
     <div className="mb-4">
-      <label className="text-sm font-semibold text-gray-700 block mb-1">{label}</label>
+      <label htmlFor={id} className="text-sm font-semibold text-gray-700 block mb-1">{label}</label>
       <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-blue-400">
         {prefix && <span className="px-3 text-gray-400 text-sm bg-gray-50 border-r border-gray-200 py-2.5">{prefix}</span>}
         <input
+          id={id}
           type="number"
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -43,7 +56,7 @@ export function InputBox({ label, value, setValue, prefix = "", suffix = "", pla
   )
 }
 
-/* ── Calculator 1: X% of Y ── */
+/* ── Calculator 1: X% of Y ── (no divide-by-zero risk here, unchanged logic) */
 export function PercentOfNumber() {
   const [percent, setPercent] = useState(15)
   const [number, setNumber] = useState(5000)
@@ -62,31 +75,39 @@ export function PercentOfNumber() {
   )
 }
 
-/* ── Calculator 2: X is what % of Y ── */
+/* ── Calculator 2: X is what % of Y ── FIXED: guard against total = 0 */
 export function WhatPercent() {
   const [part, setPart] = useState(750)
   const [total, setTotal] = useState(5000)
-  const result = (Number(part) / Number(total)) * 100
+  const totalNum = Number(total)
+  const isInvalid = totalNum === 0
+  const result = isInvalid ? 0 : (Number(part) / totalNum) * 100
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
       <h2 className="font-bold text-gray-800 mb-1">X is what % of Y?</h2>
       <p className="text-xs text-gray-400 mb-4">Example: 750 is what % of 5000?</p>
       <InputBox label="Value (X)" value={part} setValue={setPart} prefix="₹" />
       <InputBox label="Total (Y)" value={total} setValue={setTotal} prefix="₹" />
-      <div className="bg-green-600 rounded-xl p-4 text-white mt-2">
-        <p className="text-green-100 text-sm">{format(part)} is what % of {format(total)}?</p>
-        <p className="text-3xl font-bold">{format(result)}%</p>
-      </div>
+      {isInvalid ? (
+        <WarningBox message="Total can't be 0 — enter a non-zero value to calculate a percentage." />
+      ) : (
+        <div className="bg-green-600 rounded-xl p-4 text-white mt-2">
+          <p className="text-green-100 text-sm">{format(part)} is what % of {format(total)}?</p>
+          <p className="text-3xl font-bold">{format(result)}%</p>
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Calculator 3: Percentage Increase / Decrease ── */
+/* ── Calculator 3: Percentage Increase / Decrease ── FIXED: guard against oldVal = 0 */
 export function PercentChange() {
   const [oldVal, setOldVal] = useState(400)
   const [newVal, setNewVal] = useState(500)
-  const change = Number(newVal) - Number(oldVal)
-  const result = (change / Number(oldVal)) * 100
+  const oldNum = Number(oldVal)
+  const isInvalid = oldNum === 0
+  const change = Number(newVal) - oldNum
+  const result = isInvalid ? 0 : (change / oldNum) * 100
   const isIncrease = result >= 0
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -94,16 +115,20 @@ export function PercentChange() {
       <p className="text-xs text-gray-400 mb-4">Example: Change from 400 to 500</p>
       <InputBox label="Original Value" value={oldVal} setValue={setOldVal} />
       <InputBox label="New Value" value={newVal} setValue={setNewVal} />
-      <div className={`${isIncrease ? "bg-green-600" : "bg-red-500"} rounded-xl p-4 text-white mt-2`}>
-        <p className="opacity-80 text-sm">{format(oldVal)} → {format(newVal)}</p>
-        <p className="text-3xl font-bold">{isIncrease ? "+" : ""}{format(result)}%</p>
-        <p className="opacity-80 text-sm mt-1">{isIncrease ? "Increase" : "Decrease"} of {format(Math.abs(change))}</p>
-      </div>
+      {isInvalid ? (
+        <WarningBox message="Original value can't be 0 — percentage change is undefined." />
+      ) : (
+        <div className={`${isIncrease ? "bg-green-600" : "bg-red-500"} rounded-xl p-4 text-white mt-2`}>
+          <p className="opacity-80 text-sm">{format(oldVal)} → {format(newVal)}</p>
+          <p className="text-3xl font-bold">{isIncrease ? "+" : ""}{format(result)}%</p>
+          <p className="opacity-80 text-sm mt-1">{isIncrease ? "Increase" : "Decrease"} of {format(Math.abs(change))}</p>
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Calculator 4: Add percentage to number ── */
+/* ── Calculator 4: Add percentage to number ── (no divide-by-zero risk, unchanged) */
 export function AddPercent() {
   const [number, setNumber] = useState(1000)
   const [percent, setPercent] = useState(18)
@@ -123,11 +148,13 @@ export function AddPercent() {
   )
 }
 
-/* ── Calculator 5: Remove percentage from number ── */
+/* ── Calculator 5: Remove percentage from number ── FIXED: guard against percent = -100 */
 export function RemovePercent() {
   const [number, setNumber] = useState(1180)
   const [percent, setPercent] = useState(18)
-  const result = Number(number) / (1 + Number(percent) / 100)
+  const divisor = 1 + Number(percent) / 100
+  const isInvalid = divisor === 0
+  const result = isInvalid ? 0 : Number(number) / divisor
   const removed = Number(number) - result
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -135,15 +162,19 @@ export function RemovePercent() {
       <p className="text-xs text-gray-400 mb-4">Example: Price with 18% GST included — what is the original price?</p>
       <InputBox label="Amount with % included" value={number} setValue={setNumber} prefix="₹" />
       <InputBox label="Percentage to Remove" value={percent} setValue={setPercent} suffix="%" />
-      <div className="bg-amber-500 rounded-xl p-4 text-white mt-2">
-        <p className="text-amber-100 text-sm">Original price before {percent}% (removed ₹{format(removed)})</p>
-        <p className="text-3xl font-bold">₹{format(result)}</p>
-      </div>
+      {isInvalid ? (
+        <WarningBox message="Percentage to remove can't be -100% — that makes the calculation undefined." />
+      ) : (
+        <div className="bg-amber-500 rounded-xl p-4 text-white mt-2">
+          <p className="text-amber-100 text-sm">Original price before {percent}% (removed ₹{format(removed)})</p>
+          <p className="text-3xl font-bold">₹{format(result)}</p>
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Calculator 6: Discount Calculator ── */
+/* ── Calculator 6: Discount Calculator ── (no divide-by-zero risk, unchanged) */
 export function DiscountCalculator() {
   const [price, setPrice] = useState(2000)
   const [discount, setDiscount] = useState(20)
@@ -167,20 +198,25 @@ export function DiscountCalculator() {
   )
 }
 
-/* ── Calculator 7: GST Calculator ── */
+/* ── Calculator 7: GST Calculator ── FIXED: guard against rate = -100 in inclusive mode */
 export function GSTCalculator() {
   const [amount, setAmount] = useState(1000)
   const [gstRate, setGstRate] = useState(18)
   const [mode, setMode] = useState("exclusive")
 
   let baseAmount, gstAmount, totalAmount
-  if (mode === "exclusive") {
+  const divisor = 1 + Number(gstRate) / 100
+  const isInvalid = mode === "inclusive" && divisor === 0
+
+  if (isInvalid) {
+    baseAmount = gstAmount = totalAmount = 0
+  } else if (mode === "exclusive") {
     baseAmount = Number(amount)
     gstAmount = (baseAmount * Number(gstRate)) / 100
     totalAmount = baseAmount + gstAmount
   } else {
     totalAmount = Number(amount)
-    baseAmount = totalAmount / (1 + Number(gstRate) / 100)
+    baseAmount = totalAmount / divisor
     gstAmount = totalAmount - baseAmount
   }
 
@@ -214,22 +250,28 @@ export function GSTCalculator() {
         </div>
       </div>
 
-      <div className="bg-green-600 rounded-xl p-4 text-white mt-2">
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div><p className="text-green-100 text-xs mb-1">Base Amount</p><p className="font-bold text-lg">₹{format(baseAmount)}</p></div>
-          <div><p className="text-green-100 text-xs mb-1">GST ({gstRate}%)</p><p className="font-bold text-lg">₹{format(gstAmount)}</p></div>
-          <div><p className="text-green-100 text-xs mb-1">Total</p><p className="font-bold text-lg">₹{format(totalAmount)}</p></div>
+      {isInvalid ? (
+        <WarningBox message="GST rate can't be -100% — that makes the calculation undefined." />
+      ) : (
+        <div className="bg-green-600 rounded-xl p-4 text-white mt-2">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div><p className="text-green-100 text-xs mb-1">Base Amount</p><p className="font-bold text-lg">₹{format(baseAmount)}</p></div>
+            <div><p className="text-green-100 text-xs mb-1">GST ({gstRate}%)</p><p className="font-bold text-lg">₹{format(gstAmount)}</p></div>
+            <div><p className="text-green-100 text-xs mb-1">Total</p><p className="font-bold text-lg">₹{format(totalAmount)}</p></div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
 
-/* ── Calculator 8: Marks / Grade Percentage ── */
+/* ── Calculator 8: Marks / Grade Percentage ── FIXED: guard against total = 0 */
 export function MarksCalculator() {
   const [obtained, setObtained] = useState(450)
   const [total, setTotal] = useState(600)
-  const percentage = (Number(obtained) / Number(total)) * 100
+  const totalNum = Number(total)
+  const isInvalid = totalNum === 0
+  const percentage = isInvalid ? 0 : (Number(obtained) / totalNum) * 100
   const getGrade = (p) => {
     if (p >= 90) return { grade: "O (Outstanding)", color: "text-green-600" }
     if (p >= 80) return { grade: "A+ (Excellent)", color: "text-green-600" }
@@ -247,11 +289,15 @@ export function MarksCalculator() {
       <p className="text-xs text-gray-400 mb-4">Calculate percentage of marks scored</p>
       <InputBox label="Marks Obtained" value={obtained} setValue={setObtained} />
       <InputBox label="Total Marks" value={total} setValue={setTotal} />
-      <div className="bg-purple-600 rounded-xl p-4 text-white mt-2">
-        <p className="text-purple-100 text-sm">{format(obtained)} out of {format(total)}</p>
-        <p className="text-3xl font-bold mb-1">{format(percentage)}%</p>
-        <p className={`text-sm font-semibold bg-white rounded-lg px-3 py-1 inline-block ${color}`}>{grade}</p>
-      </div>
+      {isInvalid ? (
+        <WarningBox message="Total marks can't be 0 — enter the maximum possible marks." />
+      ) : (
+        <div className="bg-purple-600 rounded-xl p-4 text-white mt-2">
+          <p className="text-purple-100 text-sm">{format(obtained)} out of {format(total)}</p>
+          <p className="text-3xl font-bold mb-1">{format(percentage)}%</p>
+          <p className={`text-sm font-semibold bg-white rounded-lg px-3 py-1 inline-block ${color}`}>{grade}</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -301,7 +347,7 @@ export const ALL_CALCULATORS = [
   { href: "/percentage-calculator", label: "All Percentage Calculators" },
   { href: "/discount-calculator", label: "Discount Calculator" },
   { href: "/gst-calculator", label: "GST Calculator" },
-  { href: "/percentage-increase-calculator", label: "Percentage Increase / Decrease" },
+  { href: "/percentage-increase-calculator", label: "Percentage Increase / Decrease Calculator" },
   { href: "/marks-percentage-calculator", label: "Marks Percentage Calculator" },
 ]
 
