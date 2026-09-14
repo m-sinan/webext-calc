@@ -7,16 +7,26 @@ const formatL = (num) => {
   if (num >= 100000) return (num / 100000).toFixed(2) + " L"
   return format(num)
 }
+const formatTenure = (months) => {
+  const y = Math.floor(months / 12)
+  const m = months % 12
+  if (y === 0) return `${m} months`
+  if (m === 0) return `${y} years`
+  return `${y}yr ${m}mo`
+}
 
 /* ── Shared UI ── */
-function SliderInput({ label, value, setValue, min, max, step, prefix = "₹", suffix = "" }) {
+function SliderInput({ label, value, setValue, min, max, step, prefix = "₹", suffix = "", hint = "" }) {
   return (
     <div className="mb-5">
-      <label className="text-sm font-semibold text-gray-700 block mb-1">{label}</label>
+      <div className="flex justify-between items-center mb-1">
+        <label className="text-sm font-semibold text-gray-700">{label}</label>
+        {hint && <span className="text-xs text-gray-400">{hint}</span>}
+      </div>
       <div className="flex items-center gap-3">
         <input type="range" min={min} max={max} step={step} value={value}
           onChange={(e) => setValue(Number(e.target.value))} className="flex-1 accent-blue-600" />
-        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden min-w-[120px]">
+        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden min-w-[130px]">
           {prefix && <span className="px-2 text-gray-400 text-sm bg-gray-50 border-r border-gray-200">{prefix}</span>}
           <input type="number" value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -53,12 +63,77 @@ function buildSchedule(principal, annualRate, months) {
   return rows
 }
 
+/* ── Loan Type Config ── */
+const LOAN_TYPES = {
+  home: {
+    label: "Home Loan",
+    defaultAmount: 2500000,
+    defaultRate: 8.5,
+    defaultTenure: 240,
+    maxAmount: 50000000,
+    maxTenure: 360,
+    minRate: 7,
+    color: "blue",
+  },
+  car: {
+    label: "Car Loan",
+    defaultAmount: 800000,
+    defaultRate: 9.5,
+    defaultTenure: 60,
+    maxAmount: 5000000,
+    maxTenure: 84,
+    minRate: 7,
+    color: "green",
+  },
+  personal: {
+    label: "Personal Loan",
+    defaultAmount: 500000,
+    defaultRate: 14,
+    defaultTenure: 36,
+    maxAmount: 5000000,
+    maxTenure: 60,
+    minRate: 10,
+    color: "purple",
+  },
+}
+
+/* ── Copy to clipboard ── */
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+  return (
+    <button onClick={handleCopy}
+      className="text-xs text-blue-600 border border-blue-200 rounded-lg px-3 py-1.5 hover:bg-blue-50 transition">
+      {copied ? "✅ Copied!" : "📋 Copy Result"}
+    </button>
+  )
+}
+
 /* ── Tab 1: EMI Calculator ── */
 function EmiTab() {
-  const [loan, setLoan] = useState(2500000)
-  const [rate, setRate] = useState(8.5)
-  const [tenure, setTenure] = useState(240)
+  const [loanType, setLoanType] = useState("home")
+  const [loan, setLoan] = useState(LOAN_TYPES.home.defaultAmount)
+  const [rate, setRate] = useState(LOAN_TYPES.home.defaultRate)
+  const [tenure, setTenure] = useState(LOAN_TYPES.home.defaultTenure)
   const [showFull, setShowFull] = useState(false)
+  const [showReverse, setShowReverse] = useState(false)
+  const [monthlyBudget, setMonthlyBudget] = useState(25000)
+  const [reverseRate, setReverseRate] = useState(8.5)
+  const [reverseTenure, setReverseTenure] = useState(240)
+
+  const config = LOAN_TYPES[loanType]
+
+  const handleLoanTypeChange = (type) => {
+    setLoanType(type)
+    setLoan(LOAN_TYPES[type].defaultAmount)
+    setRate(LOAN_TYPES[type].defaultRate)
+    setTenure(LOAN_TYPES[type].defaultTenure)
+  }
 
   const emi = calcEMI(loan, rate, tenure)
   const totalPayment = emi * tenure
@@ -66,24 +141,61 @@ function EmiTab() {
   const schedule = useMemo(() => buildSchedule(loan, rate, tenure), [loan, rate, tenure])
   const displayRows = showFull ? schedule : schedule.slice(0, 12)
 
+  // Reverse EMI — max loan from monthly budget
+  const rR = reverseRate / 12 / 100
+  const maxLoan = rR > 0
+    ? monthlyBudget * (Math.pow(1 + rR, reverseTenure) - 1) / (rR * Math.pow(1 + rR, reverseTenure))
+    : monthlyBudget * reverseTenure
+
+  const copyText = `EMI Calculator Result (WebExt.in)
+Loan Amount: ₹${format(loan)}
+Interest Rate: ${rate}%
+Tenure: ${formatTenure(tenure)}
+Monthly EMI: ₹${format(emi)}
+Total Interest: ₹${formatL(totalInterest)}
+Total Payment: ₹${formatL(totalPayment)}`
+
   return (
     <>
+      {/* Loan Type Selector */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Enter Loan Details</h2>
-        <SliderInput label="Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
-        <SliderInput label="Interest Rate (per year)" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
-        <SliderInput label="Loan Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
+        <h2 className="font-bold text-gray-800 mb-4">Select Loan Type</h2>
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {Object.entries(LOAN_TYPES).map(([key, val]) => (
+            <button key={key} type="button" onClick={() => handleLoanTypeChange(key)}
+              className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition ${loanType === key ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-100 bg-white text-gray-600 hover:border-gray-200"}`}>
+              {val.label}
+            </button>
+          ))}
+        </div>
+
+        <SliderInput label="Loan Amount" value={loan} setValue={setLoan}
+          min={100000} max={config.maxAmount} step={50000} />
+        <SliderInput label="Interest Rate (per year)" value={rate} setValue={setRate}
+          min={config.minRate} max={25} step={0.1} prefix="" suffix="%" />
+        <SliderInput
+          label="Loan Tenure"
+          value={tenure}
+          setValue={setTenure}
+          min={6}
+          max={config.maxTenure}
+          step={1}
+          prefix=""
+          suffix=" mo"
+          hint={formatTenure(tenure)}
+        />
       </div>
 
-      <div className="bg-blue-600 rounded-2xl p-6 text-white mb-6">
+      {/* Result */}
+      <div className="bg-blue-600 rounded-2xl p-6 text-white mb-4">
         <p className="text-blue-100 text-sm mb-1">Monthly EMI</p>
         <p className="text-4xl font-bold mb-6">₹{format(emi)}</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {[
             { label: "Principal Amount", value: formatL(loan) },
             { label: "Total Interest", value: formatL(totalInterest) },
             { label: "Total Payment", value: formatL(totalPayment) },
-            { label: "Tenure", value: `${Math.floor(tenure / 12)}yr ${tenure % 12}mo` },
+            { label: "Tenure", value: formatTenure(tenure) },
           ].map((r) => (
             <div key={r.label} className="bg-blue-700 rounded-xl p-3">
               <p className="text-blue-200 text-xs mb-1">{r.label}</p>
@@ -91,25 +203,54 @@ function EmiTab() {
             </div>
           ))}
         </div>
-        <div className="mt-4 pt-4 border-t border-blue-500">
+        <div className="mt-2 pt-4 border-t border-blue-500">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-blue-100">Principal</span>
-            <span className="text-blue-100">Interest</span>
+            <span className="text-blue-100">Principal {Math.round((loan / totalPayment) * 100)}%</span>
+            <span className="text-blue-100">Interest {Math.round((totalInterest / totalPayment) * 100)}%</span>
           </div>
           <div className="w-full bg-blue-800 rounded-full h-3">
             <div className="bg-white h-3 rounded-full" style={{ width: `${(loan / totalPayment) * 100}%` }} />
           </div>
-          <div className="flex justify-between text-xs mt-1">
-            <span className="text-blue-200">{Math.round((loan / totalPayment) * 100)}%</span>
-            <span className="text-blue-200">{Math.round((totalInterest / totalPayment) * 100)}%</span>
-          </div>
         </div>
+      </div>
+
+      {/* Copy Result */}
+      <div className="flex justify-end mb-6">
+        <CopyButton text={copyText} />
+      </div>
+
+      {/* Reverse EMI Calculator */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <button type="button" onClick={() => setShowReverse(!showReverse)}
+          className="w-full flex justify-between items-center">
+          <div>
+            <p className="font-bold text-gray-800 text-left">🔄 Reverse EMI Calculator</p>
+            <p className="text-xs text-gray-400 text-left mt-0.5">What loan amount can I afford with my monthly budget?</p>
+          </div>
+          <span className="text-blue-600 text-lg">{showReverse ? "−" : "+"}</span>
+        </button>
+
+        {showReverse && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <SliderInput label="Monthly EMI Budget" value={monthlyBudget} setValue={setMonthlyBudget}
+              min={1000} max={500000} step={1000} />
+            <SliderInput label="Expected Interest Rate" value={reverseRate} setValue={setReverseRate}
+              min={5} max={25} step={0.1} prefix="" suffix="%" />
+            <SliderInput label="Loan Tenure" value={reverseTenure} setValue={setReverseTenure}
+              min={6} max={360} step={1} prefix="" suffix=" mo" hint={formatTenure(reverseTenure)} />
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mt-2">
+              <p className="text-sm text-gray-600 mb-1">Maximum Loan You Can Afford</p>
+              <p className="text-3xl font-bold text-green-600">₹{formatL(maxLoan)}</p>
+              <p className="text-xs text-gray-400 mt-1">At ₹{format(monthlyBudget)}/mo EMI for {formatTenure(reverseTenure)} at {reverseRate}%</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Amortization Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h3 className="font-bold text-gray-800 mb-1">Loan Amortization Schedule</h3>
-        <p className="text-xs text-gray-400 mb-4">Month by month breakdown of principal vs interest for your loan EMI</p>
+        <p className="text-xs text-gray-400 mb-4">Month by month breakdown of principal vs interest</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -182,17 +323,17 @@ function PrepaymentTab() {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Home Loan Prepayment Calculator</h2>
-        <SliderInput label="Original Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
-        <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
-        <SliderInput label="Original Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
-        <SliderInput label="Prepayment in Month" value={prepayMonth} setValue={setPrepayMonth} min={1} max={tenure - 1} step={1} prefix="" suffix="" />
+        <h2 className="font-bold text-gray-800 mb-4">Loan Prepayment Calculator</h2>
+        <SliderInput label="Original Loan Amount" value={loan} setValue={setLoan} min={100000} max={50000000} step={50000} />
+        <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={25} step={0.1} prefix="" suffix="%" />
+        <SliderInput label="Original Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={1} prefix="" suffix=" mo" hint={formatTenure(tenure)} />
+        <SliderInput label="Prepayment in Month No." value={prepayMonth} setValue={setPrepayMonth} min={1} max={tenure - 1} step={1} prefix="" suffix="" hint={`Month ${prepayMonth} of ${tenure}`} />
         <SliderInput label="Prepayment Amount" value={prepayAmount} setValue={setPrepayAmount} min={10000} max={loan} step={10000} />
         <div className="mt-2">
           <label className="text-sm font-semibold text-gray-700 block mb-2">After prepayment, I want to:</label>
           <div className="flex gap-3">
             {[
-              { val: "reduce_tenure", label: "Reduce loan tenure" },
+              { val: "reduce_tenure", label: "✅ Reduce tenure (saves more)" },
               { val: "reduce_emi", label: "Reduce monthly EMI" },
             ].map((o) => (
               <button key={o.val} type="button" onClick={() => setPrepayType(o.val)}
@@ -205,11 +346,11 @@ function PrepaymentTab() {
       </div>
 
       <div className="bg-green-600 rounded-2xl p-6 text-white mb-6">
-        <p className="text-green-100 text-sm mb-1">You Save</p>
+        <p className="text-green-100 text-sm mb-1">Total Interest Saved</p>
         <p className="text-4xl font-bold mb-4">₹{format(Math.max(0, interestSaving))}</p>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Months Saved", value: `${Math.max(0, monthsSaved)} months` },
+            { label: "Time Saved", value: monthsSaved > 0 ? formatTenure(monthsSaved) : "0 months" },
             { label: prepayType === "reduce_emi" ? "New Monthly EMI" : "EMI (unchanged)", value: `₹${format(newEMI)}` },
             { label: "Interest Without Prepay", value: `₹${formatL(interestWithout)}` },
             { label: "Interest With Prepay", value: `₹${formatL(totalInterestWith)}` },
@@ -225,16 +366,16 @@ function PrepaymentTab() {
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
         <p className="text-sm font-semibold text-amber-700 mb-2">💡 Key Insight</p>
         <p className="text-sm text-gray-600">
-          Prepaying ₹{formatL(prepayAmount)} in month {prepayMonth} saves you{" "}
+          Prepaying ₹{formatL(prepayAmount)} in month {prepayMonth} saves{" "}
           <span className="font-bold text-green-600">₹{format(Math.max(0, interestSaving))}</span> in interest — that's a{" "}
-          <span className="font-bold">{prepayAmount > 0 ? Math.round((Math.max(0, interestSaving) / prepayAmount) * 100) : 0}% return</span> on your prepayment. Earlier you prepay, more you save.
+          <span className="font-bold">{prepayAmount > 0 ? Math.round((Math.max(0, interestSaving) / prepayAmount) * 100) : 0}% return</span> on your prepayment. The earlier you prepay, the more you save.
         </p>
       </div>
     </>
   )
 }
 
-/* ── Tab 3: Loan Closure Guide ── */
+/* ── Tab 3: Close Faster ── */
 function ClosureTab() {
   const [loan, setLoan] = useState(2500000)
   const [rate, setRate] = useState(8.5)
@@ -244,7 +385,6 @@ function ClosureTab() {
 
   const emi = calcEMI(loan, rate, tenure)
   const totalInterestNormal = emi * tenure - loan
-
   const extraMonthlyEquivalent = (emi * extraEMIPerYear) / 12
   const newEMI1 = emi + extraMonthlyEquivalent
   const r = rate / 12 / 100
@@ -268,57 +408,22 @@ function ClosureTab() {
   const monthsSaved2 = tenure - months2
 
   const tips = [
-    {
-      icon: "📅",
-      title: "Pay one extra EMI every year",
-      desc: `On your ₹${formatL(loan)} loan, paying just ${extraEMIPerYear} extra EMI per year saves you ₹${formatL(Math.max(0, saving1))} and closes the loan ${Math.max(0, Math.floor(monthsSaved1 / 12))} years ${Math.max(0, monthsSaved1 % 12)} months early.`,
-      highlight: true,
-    },
-    {
-      icon: "📈",
-      title: "Increase EMI by 5% every year",
-      desc: `As your salary grows, step up your EMI annually. A ${annualEMIIncrease}% yearly increase saves ₹${formatL(saving2)} and closes your loan ${Math.max(0, Math.floor(monthsSaved2 / 12))} years early.`,
-      highlight: true,
-    },
-    {
-      icon: "🎯",
-      title: "Use bonus for part prepayment",
-      desc: "RBI rules: Banks CANNOT charge prepayment penalty on floating rate home loans. So every bonus or increment you put toward the loan reduces principal directly and saves massive interest.",
-      highlight: false,
-    },
-    {
-      icon: "⚡",
-      title: "Early prepayment saves more",
-      desc: "₹1 lakh prepaid in year 1 saves 3-4x more interest than ₹1 lakh prepaid in year 10. In early years, 80% of your EMI goes to interest. Prepay early to fight this.",
-      highlight: false,
-    },
-    {
-      icon: "🏦",
-      title: "Switch to lower interest rate",
-      desc: "If rates drop by 0.5% or more, consider balance transfer to another bank. Processing fee is usually ₹5,000-15,000 but savings can be lakhs on a large loan.",
-      highlight: false,
-    },
-    {
-      icon: "📋",
-      title: "Choose tenure reduction over EMI reduction",
-      desc: "When making a prepayment, always choose 'reduce tenure' not 'reduce EMI'. You save far more interest by closing faster than by keeping a lower EMI for the same period.",
-      highlight: false,
-    },
-    {
-      icon: "🔒",
-      title: "Get NOC immediately after closure",
-      desc: "Once loan is fully paid, collect No Objection Certificate (NOC) from bank, get original property documents back, and update CIBIL by getting a closure letter. Don't skip this step.",
-      highlight: false,
-    },
+    { icon: "📅", title: "Pay extra EMIs every year", desc: `Paying ${extraEMIPerYear} extra EMI per year on your ₹${formatL(loan)} loan saves ₹${formatL(Math.max(0, saving1))} and closes the loan ${formatTenure(Math.max(0, monthsSaved1))} early.`, highlight: true },
+    { icon: "📈", title: `Step up EMI by ${annualEMIIncrease}% every year`, desc: `As your salary grows, increase your EMI annually. A ${annualEMIIncrease}% yearly step-up saves ₹${formatL(saving2)} and closes your loan ${formatTenure(Math.max(0, monthsSaved2))} early.`, highlight: true },
+    { icon: "🎯", title: "Use bonus for prepayment", desc: "RBI rules: Banks CANNOT charge prepayment penalty on floating rate home loans. Put every bonus toward the loan — it reduces principal directly.", highlight: false },
+    { icon: "⚡", title: "Prepay early for maximum savings", desc: "₹1 lakh prepaid in year 1 saves 3-4x more than ₹1 lakh prepaid in year 10. In early years, 80% of your EMI goes to interest — prepay early to beat this.", highlight: false },
+    { icon: "🏦", title: "Switch to a lower interest rate", desc: "If rates drop by 0.5%+, consider a balance transfer. Processing fee of ₹5,000-15,000 is worth it on large loans where savings can be in lakhs.", highlight: false },
+    { icon: "📋", title: "Always choose tenure reduction", desc: "When prepaying, choose 'reduce tenure' not 'reduce EMI'. You save far more interest by closing faster.", highlight: false },
+    { icon: "🔒", title: "Get NOC after full closure", desc: "After full loan repayment, collect NOC from bank, get original property documents back, and get a closure letter to update CIBIL.", highlight: false },
   ]
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="font-bold text-gray-800 mb-4">Close Your Loan Faster</h2>
-        <SliderInput label="Loan Amount" value={loan} setValue={setLoan} min={100000} max={10000000} step={50000} />
-        <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={20} step={0.1} prefix="" suffix="%" />
-        <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={12} prefix="" suffix=" mo" />
+        <SliderInput label="Loan Amount" value={loan} setValue={setLoan} min={100000} max={50000000} step={50000} />
+        <SliderInput label="Interest Rate" value={rate} setValue={setRate} min={5} max={25} step={0.1} prefix="" suffix="%" />
+        <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={12} max={360} step={1} prefix="" suffix=" mo" hint={formatTenure(tenure)} />
         <SliderInput label="Extra EMIs per year" value={extraEMIPerYear} setValue={setExtraEMIPerYear} min={1} max={6} step={1} prefix="" suffix="" />
         <SliderInput label="Annual EMI step-up %" value={annualEMIIncrease} setValue={setAnnualEMIIncrease} min={1} max={20} step={1} prefix="" suffix="%" />
       </div>
@@ -340,10 +445,10 @@ function ClosureTab() {
       <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6">
         <h3 className="font-bold text-green-800 mb-2">⚖️ RBI Rules You Must Know</h3>
         <div className="space-y-2 text-sm text-gray-600">
-          <div className="flex items-start gap-2"><span className="text-green-600 font-bold mt-0.5">✓</span><span><span className="font-semibold">No prepayment penalty</span> on floating rate home loans — RBI banned this in 2012. Banks cannot charge you for prepaying.</span></div>
-          <div className="flex items-start gap-2"><span className="text-green-600 font-bold mt-0.5">✓</span><span><span className="font-semibold">Fixed rate loans</span> may have prepayment penalty — check your loan agreement before making large prepayments.</span></div>
-          <div className="flex items-start gap-2"><span className="text-green-600 font-bold mt-0.5">✓</span><span><span className="font-semibold">Part prepayment</span> must be applied to principal, not future EMIs. Demand a revised amortization schedule from your bank.</span></div>
-          <div className="flex items-start gap-2"><span className="text-green-600 font-bold mt-0.5">✓</span><span><span className="font-semibold">After full closure</span> — bank must return all original property documents within 30 days as per RBI guidelines.</span></div>
+          <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span><span className="font-semibold">No prepayment penalty</span> on floating rate home loans — RBI banned this in 2012.</span></div>
+          <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span><span className="font-semibold">Fixed rate loans</span> may have penalty — check your loan agreement before prepaying.</span></div>
+          <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span><span className="font-semibold">Part prepayment</span> must reduce principal, not future EMIs. Ask your bank for a revised schedule.</span></div>
+          <div className="flex items-start gap-2"><span className="text-green-600 font-bold">✓</span><span><span className="font-semibold">After full closure</span> — bank must return original documents within 30 days per RBI rules.</span></div>
         </div>
       </div>
     </>
@@ -351,42 +456,86 @@ function ClosureTab() {
 }
 
 /* ── Tab 4: Compare Banks ── */
+const BANK_DATA = {
+  home: [
+    { name: "Bank of Baroda", rate: 8.4, logo: "🟡", special: "Lowest rate for eligible borrowers" },
+    { name: "SBI", rate: 8.5, logo: "🏛️", special: "Best for salaried govt employees" },
+    { name: "PNB Housing", rate: 8.5, logo: "🟢", special: "Good for tier 2/3 cities" },
+    { name: "LIC Housing", rate: 8.5, logo: "⚪", special: "Popular for long tenure loans" },
+    { name: "Kotak Mahindra", rate: 8.7, logo: "🔴", special: "Good for high CIBIL score" },
+    { name: "HDFC Bank", rate: 8.75, logo: "🔵", special: "Fast processing, self-employed friendly" },
+    { name: "ICICI Bank", rate: 8.75, logo: "🟠", special: "Good balance transfer offers" },
+    { name: "Axis Bank", rate: 8.75, logo: "🟣", special: "Flexible tenure options" },
+  ],
+  car: [
+    { name: "SBI", rate: 8.85, logo: "🏛️", special: "Lowest for existing SBI customers" },
+    { name: "Bank of Baroda", rate: 8.9, logo: "🟡", special: "Competitive rates for new cars" },
+    { name: "HDFC Bank", rate: 9.0, logo: "🔵", special: "Fast approval, wide dealer network" },
+    { name: "ICICI Bank", rate: 9.1, logo: "🟠", special: "Good for pre-owned cars too" },
+    { name: "Axis Bank", rate: 9.25, logo: "🟣", special: "Flexible EMI options" },
+    { name: "Kotak Mahindra", rate: 9.5, logo: "🔴", special: "Good for self-employed" },
+  ],
+  personal: [
+    { name: "SBI", rate: 11.45, logo: "🏛️", special: "Best for govt/PSU employees" },
+    { name: "Bank of Baroda", rate: 12.0, logo: "🟡", special: "Good for existing customers" },
+    { name: "HDFC Bank", rate: 10.85, logo: "🔵", special: "Pre-approved offers for customers" },
+    { name: "ICICI Bank", rate: 10.85, logo: "🟠", special: "Instant disbursal for salaried" },
+    { name: "Axis Bank", rate: 11.25, logo: "🟣", special: "Flexible repayment options" },
+    { name: "Kotak Mahindra", rate: 10.99, logo: "🔴", special: "Good for high credit score" },
+  ],
+}
+
 function CompareBanksTab() {
+  const [loanType, setLoanType] = useState("home")
   const [loanAmount, setLoanAmount] = useState(2500000)
   const [tenure, setTenure] = useState(240)
 
-  const banks = [
-    { name: "SBI", rate: 8.5, logo: "🏛️", special: "Best for salaried govt employees" },
-    { name: "HDFC Bank", rate: 8.75, logo: "🔵", special: "Fast processing, good for self-employed" },
-    { name: "ICICI Bank", rate: 8.75, logo: "🟠", special: "Good balance transfer offers" },
-    { name: "Axis Bank", rate: 8.75, logo: "🟣", special: "Flexible tenure options" },
-    { name: "Kotak Mahindra", rate: 8.7, logo: "🔴", special: "Good for high credit score borrowers" },
-    { name: "Bank of Baroda", rate: 8.4, logo: "🟡", special: "Lowest rate for eligible borrowers" },
-    { name: "PNB Housing", rate: 8.5, logo: "🟢", special: "Good for tier 2 / tier 3 cities" },
-    { name: "LIC Housing", rate: 8.5, logo: "⚪", special: "Popular for long tenure loans" },
-  ]
+  const config = LOAN_TYPES[loanType]
+  const banks = BANK_DATA[loanType]
 
-  const withEMI = banks.map((b) => ({ ...b, emi: calcEMI(loanAmount, b.rate, tenure), totalInterest: calcEMI(loanAmount, b.rate, tenure) * tenure - loanAmount }))
-  const best = withEMI.reduce((a, b) => (a.emi < b.emi ? a : b))
+  const handleTypeChange = (type) => {
+    setLoanType(type)
+    setLoanAmount(LOAN_TYPES[type].defaultAmount)
+    setTenure(LOAN_TYPES[type].defaultTenure)
+  }
+
+  const withEMI = banks.map((b) => ({
+    ...b,
+    emi: calcEMI(loanAmount, b.rate, tenure),
+    totalInterest: calcEMI(loanAmount, b.rate, tenure) * tenure - loanAmount
+  })).sort((a, b) => a.rate - b.rate)
+
+  const best = withEMI[0]
+  const worst = withEMI[withEMI.length - 1]
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Compare Home Loan EMI Rates — SBI, HDFC, ICICI & More</h2>
-        <p className="text-xs text-gray-400 mb-4">Rates as of June 2025 — always confirm with the bank before applying. Rates vary based on credit score and income.</p>
-        <SliderInput label="Loan Amount" value={loanAmount} setValue={setLoanAmount} min={500000} max={10000000} step={100000} />
-        <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={60} max={360} step={12} prefix="" suffix=" mo" />
+        <h2 className="font-bold text-gray-800 mb-4">Compare Bank Loan Rates</h2>
+
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {Object.entries(LOAN_TYPES).map(([key, val]) => (
+            <button key={key} type="button" onClick={() => handleTypeChange(key)}
+              className={`py-2 rounded-xl text-sm font-semibold border-2 transition ${loanType === key ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-100 bg-white text-gray-600 hover:border-gray-200"}`}>
+              {val.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs text-gray-400 mb-4">⚠️ Indicative rates only — actual rates vary by credit score and income. Always confirm with the bank before applying.</p>
+        <SliderInput label="Loan Amount" value={loanAmount} setValue={setLoanAmount} min={100000} max={config.maxAmount} step={50000} />
+        <SliderInput label="Tenure" value={tenure} setValue={setTenure} min={6} max={config.maxTenure} step={1} prefix="" suffix=" mo" hint={formatTenure(tenure)} />
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
         <p className="text-sm text-green-700">
-          <span className="font-bold">Lowest EMI: {best.name}</span> at {best.rate}% — ₹{format(best.emi)}/month.
-          You save up to ₹{formatL(withEMI[withEMI.length - 1].totalInterest - best.totalInterest)} vs the highest rate option.
+          <span className="font-bold">Lowest: {best.name}</span> at {best.rate}% — ₹{format(best.emi)}/mo.
+          You save ₹{formatL(worst.totalInterest - best.totalInterest)} vs highest rate option.
         </p>
       </div>
 
       <div className="space-y-3 mb-6">
-        {withEMI.sort((a, b) => a.rate - b.rate).map((bank, i) => (
+        {withEMI.map((bank, i) => (
           <div key={bank.name} className={`bg-white rounded-2xl border p-4 shadow-sm ${i === 0 ? "border-green-300 bg-green-50" : "border-gray-100"}`}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -417,13 +566,12 @@ function CompareBanksTab() {
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-        <p className="text-sm font-semibold text-amber-700 mb-2">💡 Tips for Getting the Best Home Loan EMI Rate</p>
+        <p className="text-sm font-semibold text-amber-700 mb-2">💡 Tips to Get the Best Rate</p>
         <div className="space-y-1 text-xs text-gray-600">
-          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">CIBIL score 750+</span> gets you the best rates — check yours for free on CIBIL website before applying.</span></div>
+          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">CIBIL score 750+</span> gets you lowest rates — check free on CIBIL website before applying.</span></div>
           <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Salary account bank</span> often gives 0.1–0.25% lower rate to existing customers.</span></div>
-          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Women co-applicants</span> get 0.05–0.1% discount at most banks.</span></div>
-          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Government employees</span> get lower rates at SBI and Bank of Baroda.</span></div>
-          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Negotiate</span> — banks have flexibility, especially if you're bringing a large down payment.</span></div>
+          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Women co-applicants</span> get 0.05–0.1% discount at most banks for home loans.</span></div>
+          <div className="flex items-start gap-2"><span>✓</span><span><span className="font-semibold">Negotiate</span> — banks have flexibility, especially with large down payments.</span></div>
         </div>
       </div>
     </>
@@ -435,13 +583,13 @@ function FaqSection() {
   const [open, setOpen] = useState(null)
   const faqs = [
     { q: "What is the EMI for a 20 lakh home loan?", a: "For a ₹20 lakh home loan at 8.5% interest for 20 years, the EMI is approximately ₹17,356 per month. Use the free EMI calculator above to adjust for your exact loan amount, rate, and tenure." },
-    { q: "What happens if I miss an EMI?", a: "Missing an EMI adds a late payment fee (typically 2% of overdue amount), negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days of non-payment. If you're facing difficulty, contact your bank immediately for a restructuring option." },
-    { q: "Can I reduce my EMI after taking a loan?", a: "Yes. You can reduce EMI by making a part prepayment (the bank recalculates EMI on reduced principal), switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank if RBI repo rate has fallen." },
-    { q: "Should I prepay my home loan or invest in SIP?", a: "If your home loan rate is 8.5% and equity mutual funds historically return 12%, investing in SIP gives a higher return mathematically. However, prepaying gives a guaranteed tax-free return equal to your interest rate. A good strategy: prepay aggressively in early years (interest-heavy) and shift to SIP once loan is below 40% of original amount." },
-    { q: "Can the bank charge prepayment penalty on home loan?", a: "No. As per RBI guidelines, banks cannot charge prepayment penalty on floating rate home loans. Fixed rate loans may have a penalty — check your loan agreement. Always demand a letter confirming zero penalty before making a large prepayment." },
-    { q: "What is the maximum home loan I can get?", a: "Banks typically give up to 80% of property value (LTV ratio). So for a ₹50 lakh property, maximum loan is ₹40 lakh. Your EMI should not exceed 40–50% of your net monthly income as per bank norms. Minimum CIBIL score required is usually 700–750." },
-    { q: "What happens to home loan if I lose my job?", a: "Immediately inform your bank. Most banks offer EMI moratorium (pause) for 3–6 months for genuine hardship. You can also use your emergency fund to service EMIs. Loan insurance (if taken) may cover EMIs in case of job loss or disability." },
-    { q: "Is home loan interest tax deductible?", a: "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible from taxable income for a self-occupied property. Principal repayment up to ₹1.5 lakh qualifies under Section 80C. This benefit is only available in the Old Tax Regime." },
+    { q: "What happens if I miss an EMI?", a: "Missing an EMI adds a late payment fee (typically 2% of overdue amount), negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days. Contact your bank immediately for a restructuring option." },
+    { q: "Can I reduce my EMI after taking a loan?", a: "Yes. You can reduce EMI by making a part prepayment, switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank if RBI repo rate has fallen." },
+    { q: "Should I prepay my home loan or invest in SIP?", a: "If your home loan rate is 8.5% and equity mutual funds return 12%, SIP gives higher return mathematically. But prepaying gives guaranteed tax-free return equal to your interest rate. Best strategy: prepay aggressively early years, shift to SIP later." },
+    { q: "Can the bank charge prepayment penalty on home loan?", a: "No. RBI prohibits prepayment penalty on floating rate home loans. Fixed rate loans may have a penalty — check your loan agreement before making a large prepayment." },
+    { q: "What is the maximum home loan I can get?", a: "Banks give up to 80% of property value. Your EMI should not exceed 40–50% of your net monthly income. Minimum CIBIL score required is usually 700–750." },
+    { q: "What happens to home loan if I lose my job?", a: "Immediately inform your bank. Most banks offer EMI moratorium for 3–6 months for genuine hardship. Loan insurance (if taken) may cover EMIs in case of job loss." },
+    { q: "Is home loan interest tax deductible?", a: "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible. Principal repayment up to ₹1.5 lakh qualifies under Section 80C. Only available in Old Tax Regime." },
   ]
 
   return (
@@ -467,7 +615,7 @@ function FaqSection() {
   )
 }
 
-/* ── SEO Content Section ── */
+/* ── SEO Content ── */
 function SeoContent() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -475,81 +623,45 @@ function SeoContent() {
       <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
         <div>
           <h3 className="font-semibold text-gray-800 mb-1">What is EMI and How Does an EMI Calculator Work?</h3>
-          <p>EMI (Equated Monthly Installment) is the fixed monthly payment you make to repay your loan. Use our free EMI calculator to instantly calculate monthly EMI for home loan, car loan, or personal loan. Each EMI has two parts — interest on the outstanding loan, and principal repayment. In early months, most of the EMI goes toward interest. Over time, the principal portion increases.</p>
+          <p>EMI (Equated Monthly Installment) is the fixed monthly payment you make to repay your loan. Use our free EMI calculator to instantly calculate monthly EMI for home loan, car loan, or personal loan. Each EMI has two parts — interest on outstanding loan, and principal repayment.</p>
         </div>
         <div>
           <h3 className="font-semibold text-gray-800 mb-1">How is Loan EMI Calculated?</h3>
-          <p>EMI = P × r × (1+r)^n / ((1+r)^n - 1), where P is the principal loan amount, r is the monthly interest rate (annual rate ÷ 12 ÷ 100), and n is the number of monthly installments. Our loan EMI calculator uses this exact formula for accurate results for home loan, car loan and personal loan EMI.</p>
+          <p>EMI = P × r × (1+r)^n / ((1+r)^n - 1), where P is principal, r is monthly interest rate, and n is number of months. Our loan EMI calculator uses this exact formula for home loan, car loan and personal loan EMI.</p>
         </div>
         <div>
           <h3 className="font-semibold text-gray-800 mb-1">Home Loan EMI vs Car Loan EMI vs Personal Loan EMI</h3>
-          <p>Home loan EMI is lowest due to longer tenure (up to 30 years) and lower interest rates (8-9%). Car loan EMI is higher with 7-9 year tenure at 9-12% interest. Personal loan EMI is highest — shortest tenure (1-5 years) and highest rates (12-24%). Use our free EMI calculator India to compare all three instantly and plan your finances better.</p>
+          <p>Home loan EMI is lowest — longer tenure (up to 30 years), lower rates (8-9%). Car loan EMI is moderate — 5-7 year tenure at 9-12%. Personal loan EMI is highest — shortest tenure (1-5 years), rates 10-24%. Use our free EMI calculator to compare all three instantly.</p>
         </div>
         <div>
           <h3 className="font-semibold text-gray-800 mb-1">What is a Good EMI to Income Ratio?</h3>
-          <p>Banks allow EMI up to 40–50% of your net monthly income. However, financial advisors recommend keeping total EMI (all loans combined) below 35% of your in-hand salary. This leaves enough for living expenses, savings, and emergencies.</p>
+          <p>Banks allow EMI up to 40–50% of net monthly income. Financial advisors recommend keeping all EMIs below 35% of in-hand salary, leaving enough for living expenses, savings, and emergencies.</p>
         </div>
         <div>
           <h3 className="font-semibold text-gray-800 mb-1">Floating vs Fixed Interest Rate — Which is Better?</h3>
-          <p>Floating rates (linked to RBI repo rate) are lower than fixed rates and reduce further when RBI cuts rates. Fixed rates give certainty but are typically 1–2% higher. For long tenure loans (15–20 years), floating rate is generally better in India given RBI's rate cycles.</p>
+          <p>Floating rates (linked to RBI repo rate) are lower and reduce when RBI cuts rates. Fixed rates give certainty but are 1–2% higher. For long tenure loans (15–20 years), floating rate is generally better in India.</p>
         </div>
       </div>
     </div>
   )
 }
 
-/* ── FAQ Schema for SEO ── */
+/* ── FAQ Schema ── */
 function FaqSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "What is the EMI for a 20 lakh home loan?",
-        "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month. Use our free EMI calculator above to get exact results for your loan amount." }
-      },
-      {
-        "@type": "Question",
-        "name": "What happens if I miss an EMI?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Missing an EMI adds a late payment fee, negatively impacts your CIBIL score, and the bank may mark the account as NPA after 90 days. Contact your bank immediately for restructuring options." }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I reduce my EMI after taking a loan?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can reduce EMI by making a part prepayment, switching to a lower interest rate through balance transfer, or renegotiating rate with your existing bank." }
-      },
-      {
-        "@type": "Question",
-        "name": "Should I prepay my home loan or invest in SIP?",
-        "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying gives guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." }
-      },
-      {
-        "@type": "Question",
-        "name": "Can the bank charge prepayment penalty on home loan?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India since 2012." }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the maximum home loan I can get?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Banks typically give up to 80% of property value. Your EMI should not exceed 40-50% of your net monthly income. Minimum CIBIL score required is usually 700-750." }
-      },
-      {
-        "@type": "Question",
-        "name": "What happens to home loan if I lose my job?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Immediately inform your bank. Most banks offer EMI moratorium for 3-6 months for genuine hardship. Loan insurance may cover EMIs in case of job loss or disability." }
-      },
-      {
-        "@type": "Question",
-        "name": "Is home loan interest tax deductible?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible. Principal repayment up to ₹1.5 lakh qualifies under Section 80C. Only available in Old Tax Regime." }
-      }
+      { "@type": "Question", "name": "What is the EMI for a 20 lakh home loan?", "acceptedAnswer": { "@type": "Answer", "text": "For a ₹20 lakh home loan at 8.5% for 20 years, the EMI is approximately ₹17,356 per month." } },
+      { "@type": "Question", "name": "Can the bank charge prepayment penalty on home loan?", "acceptedAnswer": { "@type": "Answer", "text": "No. RBI guidelines prohibit prepayment penalty on floating rate home loans in India since 2012." } },
+      { "@type": "Question", "name": "Should I prepay my home loan or invest in SIP?", "acceptedAnswer": { "@type": "Answer", "text": "If home loan rate is 8.5% and SIP returns 12%, SIP is better mathematically. But prepaying gives guaranteed risk-free return. Best strategy: prepay early years, then shift to SIP." } },
+      { "@type": "Question", "name": "Is home loan interest tax deductible?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Under Section 24(b), interest up to ₹2 lakh per year is deductible. Principal up to ₹1.5 lakh under Section 80C. Only in Old Tax Regime." } },
     ]
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 }
 
-/* ── Main Export ── */
+/* ── Main ── */
 const TABS = [
   { id: "emi", label: "EMI Calculator" },
   { id: "prepayment", label: "Prepayment" },
@@ -562,24 +674,16 @@ export default function EMICalculator() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
-
       <Helmet>
         <title>EMI Calculator — Free Loan EMI Calculator India | WebExt.in</title>
-        <meta
-          name="description"
-          content="Free EMI calculator India. Calculate monthly EMI for home loan, car loan and personal loan instantly. Compare bank rates, check prepayment savings. Fast & accurate results."
-        />
+        <meta name="description" content="Free EMI calculator India. Calculate monthly EMI for home loan, car loan and personal loan instantly. Compare bank rates, check prepayment savings. Fast & accurate results." />
         <link rel="canonical" href="https://www.webext.in/emi-calculator" />
       </Helmet>
-
       <FaqSchema />
 
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-blue-600 text-sm mb-6 inline-block hover:underline">← Back to all tools</a>
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          EMI Calculator — Calculate Home Loan, Car & Personal Loan EMI
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">EMI Calculator — Home Loan, Car & Personal Loan</h1>
         <p className="text-gray-500 mb-6">Free online loan EMI calculator India. Calculate EMI, plan prepayments, compare bank rates, and close your loan faster.</p>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
