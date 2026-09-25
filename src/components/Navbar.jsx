@@ -1,3 +1,4 @@
+import { Home } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 
@@ -7,6 +8,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <Link to="/">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">₹</span>
@@ -15,6 +17,7 @@ export default function Navbar() {
             WebExt<span className="text-blue-600">.in</span>
           </span>
         </div>
+        </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
           <Link to="/#tools" className="hover:text-blue-600 transition-colors">Tools</Link>
           <Link to="/#how" className="hover:text-blue-600 transition-colors">How it works</Link>
