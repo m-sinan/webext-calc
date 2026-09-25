@@ -16,12 +16,12 @@ export default function Navbar() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-600">
-          <a href="#tools" className="hover:text-blue-600 transition-colors">Tools</a>
-          <a href="#how" className="hover:text-blue-600 transition-colors">How it works</a>
+          <Link to="/#tools" className="hover:text-blue-600 transition-colors">Tools</Link>
+          <Link to="/#how" className="hover:text-blue-600 transition-colors">How it works</Link>
           <Link to="/blog" className="hover:text-blue-600 transition-colors">Blog</Link>
-          <a href="#tools" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+          <Link to="/#tools" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
             Try Free
-          </a>
+          </Link>
         </div>
         <button className="md:hidden text-gray-600 text-xl" onClick={() => setMenuOpen(!menuOpen)}>
           ☰
@@ -29,8 +29,8 @@ export default function Navbar() {
       </div>
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-3 text-sm text-gray-600">
-          <a href="#tools" onClick={() => setMenuOpen(false)}>Tools</a>
-          <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
+          <Link to="/#tools" onClick={() => setMenuOpen(false)}>Tools</Link>
+          <Link to="/#how" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link to="/blog" onClick={() => setMenuOpen(false)}>Blog</Link>
         </div>
       )}

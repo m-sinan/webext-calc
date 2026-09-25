@@ -9,8 +9,10 @@ const formatL = (num) => {
 }
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n))
 
-// Update this whenever the hardcoded bank/investment rates below are refreshed.
+// Update this whenever the hardcoded tax slab / threshold figures below are refreshed.
 const RATES_LAST_UPDATED = "September 2026"
+
+const METRO_CITIES = ["Delhi", "Mumbai", "Kolkata", "Chennai"]
 
 function SliderInput({ label, value, setValue, min, max, step, prefix = "₹", suffix = "" }) {
   return (
@@ -42,256 +44,247 @@ function SliderInput({ label, value, setValue, min, max, step, prefix = "₹", s
   )
 }
 
-/* ── Tab 1: FD Calculator ── */
-function FDTab() {
-  const [principal, setPrincipal] = useState(100000)
-  const [rate, setRate] = useState(7)
-  const [years, setYears] = useState(3)
-  const [compounding, setCompounding] = useState("quarterly")
-  const [isSenior, setIsSenior] = useState(false)
+// Shared HRA exemption math: returns the three components and the least-of-three exemption.
+function calcHRA({ basic, da, hraReceived, rentPaid, isMetro }) {
+  const salaryForHRA = basic + da
+  const cityPct = isMetro ? 0.5 : 0.4
+  const componentA = hraReceived
+  const componentB = salaryForHRA * cityPct
+  const componentC = Math.max(0, rentPaid - salaryForHRA * 0.1)
+  const exemption = Math.max(0, Math.min(componentA, componentB, componentC))
+  const taxable = Math.max(0, hraReceived - exemption)
+  return { componentA, componentB, componentC, exemption, taxable, salaryForHRA }
+}
 
-  const seniorBonus = isSenior ? 0.5 : 0
-  const effectiveRate = rate + seniorBonus
+/* ── Tab 1: HRA Calculator ── */
+function HRATab() {
+  const [basic, setBasic] = useState(40000)
+  const [da, setDa] = useState(0)
+  const [hraReceived, setHraReceived] = useState(20000)
+  const [rentPaid, setRentPaid] = useState(18000)
+  const [isMetro, setIsMetro] = useState(true)
+  const [period, setPeriod] = useState("monthly") // monthly | annual
 
-  const nMap = { annually: 1, "half-yearly": 2, quarterly: 4, monthly: 12 }
-  const n = nMap[compounding]
-  const maturity = principal * Math.pow(1 + effectiveRate / 100 / n, n * years)
-  const interest = maturity - principal
-  const effectiveYield = ((maturity / principal) ** (1 / years) - 1) * 100
+  const m = period === "monthly" ? 1 : 1 / 12
+  const inputMult = period === "monthly" ? 1 : 12
+
+  const { componentA, componentB, componentC, exemption, taxable, salaryForHRA } = calcHRA({
+    basic: basic * inputMult, da: da * inputMult, hraReceived: hraReceived * inputMult, rentPaid: rentPaid * inputMult, isMetro,
+  })
+
+  const winner = exemption === componentC && componentC <= componentA && componentC <= componentB
+    ? "Rent paid minus 10% of salary"
+    : exemption === componentB && componentB <= componentA
+    ? `${isMetro ? "50" : "40"}% of salary`
+    : "Actual HRA received"
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">FD Details</h2>
-        <SliderInput label="Principal Amount" value={principal} setValue={setPrincipal} min={10000} max={10000000} step={10000} />
-        <SliderInput label="Interest Rate (per year)" value={rate} setValue={setRate} min={3} max={10} step={0.1} prefix="" suffix="%" />
-        <SliderInput label="Tenure" value={years} setValue={setYears} min={1} max={10} step={1} prefix="" suffix=" yrs" />
+        <h2 className="font-bold text-gray-800 mb-4">Salary & Rent Details</h2>
 
         <div className="mb-5">
-          <label className="text-sm font-semibold text-gray-700 block mb-2">Compounding Frequency</label>
+          <label className="text-sm font-semibold text-gray-700 block mb-2">Amounts entered as</label>
           <div className="grid grid-cols-2 gap-2">
-            {["annually", "half-yearly", "quarterly", "monthly"].map((c) => (
-              <button key={c} type="button" onClick={() => setCompounding(c)}
-                className={"px-3 py-2 rounded-lg text-sm font-semibold capitalize transition " + (compounding === c ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
-                {c}
+            {["monthly", "annual"].map((p) => (
+              <button key={p} type="button" onClick={() => setPeriod(p)}
+                className={"px-3 py-2 rounded-lg text-sm font-semibold capitalize transition " + (period === p ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+                {p}
               </button>
             ))}
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-          <input type="checkbox" checked={isSenior} onChange={(e) => setIsSenior(e.target.checked)} className="accent-blue-600" />
-          Senior Citizen (extra 0.5% interest rate)
-        </label>
+        <SliderInput label={`Basic Salary (${period})`} value={basic} setValue={setBasic} min={5000} max={period === "monthly" ? 500000 : 6000000} step={1000} />
+        <SliderInput label={`Dearness Allowance (${period})`} value={da} setValue={setDa} min={0} max={period === "monthly" ? 200000 : 2400000} step={500} />
+        <SliderInput label={`HRA Received (${period})`} value={hraReceived} setValue={setHraReceived} min={0} max={period === "monthly" ? 300000 : 3600000} step={500} />
+        <SliderInput label={`Rent Paid (${period})`} value={rentPaid} setValue={setRentPaid} min={0} max={period === "monthly" ? 300000 : 3600000} step={500} />
+
+        <div className="mb-1">
+          <label className="text-sm font-semibold text-gray-700 block mb-2">City Type</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setIsMetro(true)}
+              className={"px-3 py-2 rounded-lg text-sm font-semibold transition " + (isMetro ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+              Metro (50%)
+            </button>
+            <button type="button" onClick={() => setIsMetro(false)}
+              className={"px-3 py-2 rounded-lg text-sm font-semibold transition " + (!isMetro ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+              Non-Metro (40%)
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">Metro = {METRO_CITIES.join(", ")}. All other cities count as non-metro.</p>
+        </div>
       </div>
 
       <div className="bg-blue-600 rounded-2xl p-6 text-white mb-6">
-        <p className="text-blue-100 text-sm mb-1">Maturity Amount</p>
-        <p className="text-4xl font-bold mb-1">₹{format(maturity)}</p>
-        <p className="text-blue-200 text-sm mb-6">After {years} year{years > 1 ? "s" : ""} at {effectiveRate}% {isSenior ? "(senior citizen rate)" : ""}</p>
+        <p className="text-blue-100 text-sm mb-1">HRA Exemption (Annual)</p>
+        <p className="text-4xl font-bold mb-1">₹{format(exemption / m)}</p>
+        <p className="text-blue-200 text-sm mb-6">Lowest of the three components — driven by: {winner}</p>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Principal Invested", value: `₹${formatL(principal)}` },
-            { label: "Interest Earned", value: `₹${formatL(interest)}` },
-            { label: "Effective Annual Yield", value: `${effectiveYield.toFixed(2)}%` },
-            { label: "Compounding", value: compounding },
+            { label: "Actual HRA Received", value: `₹${formatL(componentA / m)}` },
+            { label: `${isMetro ? "50" : "40"}% of Salary`, value: `₹${formatL(componentB / m)}` },
+            { label: "Rent − 10% of Salary", value: `₹${formatL(componentC / m)}` },
+            { label: "Taxable HRA", value: `₹${formatL(taxable / m)}` },
           ].map((r) => (
             <div key={r.label} className="bg-blue-700 rounded-xl p-3">
               <p className="text-blue-200 text-xs mb-1">{r.label}</p>
-              <p className="text-white font-bold capitalize">{r.value}</p>
+              <p className="text-white font-bold">{r.value}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-4 pt-4 border-t border-blue-500">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-blue-100">Principal</span>
-            <span className="text-blue-100">Interest</span>
+            <span className="text-blue-100">Exempt</span>
+            <span className="text-blue-100">Taxable</span>
           </div>
           <div className="w-full bg-blue-800 rounded-full h-3">
-            <div className="bg-white h-3 rounded-full" style={{ width: `${(principal / maturity) * 100}%` }} />
+            <div className="bg-white h-3 rounded-full" style={{ width: `${componentA ? (exemption / componentA) * 100 : 0}%` }} />
           </div>
           <div className="flex justify-between text-xs mt-1">
-            <span className="text-blue-200">{Math.round((principal / maturity) * 100)}%</span>
-            <span className="text-blue-200">{Math.round((interest / maturity) * 100)}%</span>
+            <span className="text-blue-200">{componentA ? Math.round((exemption / componentA) * 100) : 0}%</span>
+            <span className="text-blue-200">{componentA ? Math.round((taxable / componentA) * 100) : 0}%</span>
           </div>
         </div>
+      </div>
+
+      <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6">
+        <p className="text-xs text-gray-500">Basic + DA used for this calculation: <span className="font-semibold text-gray-700">₹{format(salaryForHRA / m)}/{period === "monthly" ? "month" : "year"}</span>. Special allowances and other salary components don't count toward "salary" for HRA purposes.</p>
       </div>
     </>
   )
 }
 
-/* ── Tab 2: Compare Banks ── */
-function CompareBanksTab() {
-  const [principal, setPrincipal] = useState(100000)
-  const [years, setYears] = useState(3)
-  const [isSenior, setIsSenior] = useState(false)
+/* ── Tab 2: Metro vs Non-Metro ── */
+function CompareCityTab() {
+  const [basic, setBasic] = useState(40000)
+  const [da, setDa] = useState(0)
+  const [hraReceived, setHraReceived] = useState(20000)
+  const [rentPaid, setRentPaid] = useState(18000)
 
-  const banks = [
-    { name: "SBI", general: 6.8, senior: 7.3, logo: "🏛️", note: "Most trusted, DICGC insured" },
-    { name: "HDFC Bank", general: 7.0, senior: 7.5, logo: "🔵", note: "Good rates, digital process" },
-    { name: "ICICI Bank", general: 7.0, senior: 7.5, logo: "🟠", note: "Easy online booking" },
-    { name: "Axis Bank", general: 7.1, senior: 7.6, logo: "🟣", note: "Competitive senior rates" },
-    { name: "Kotak Mahindra", general: 7.1, senior: 7.6, logo: "🔴", note: "Good for 811 account holders" },
-    { name: "Bank of Baroda", general: 6.85, senior: 7.35, logo: "🟡", note: "PSU bank, safe and reliable" },
-    { name: "Post Office (POTD)", general: 7.5, senior: 7.5, logo: "📮", note: "Government backed, highest safety" },
-    { name: "Small Finance Banks*", general: 8.5, senior: 9.0, logo: "🏦", note: "Higher rates, higher risk. DICGC covers up to ₹5L only" },
-  ]
-
-  const calc = (rate) => {
-    const n = 4
-    return principal * Math.pow(1 + rate / 100 / n, n * years)
-  }
-
-  const withMaturity = banks.map((b) => ({
-    ...b,
-    rate: isSenior ? b.senior : b.general,
-    maturity: calc(isSenior ? b.senior : b.general),
-    interest: calc(isSenior ? b.senior : b.general) - principal,
-  })).sort((a, b) => b.rate - a.rate)
-
-  const best = withMaturity[0]
+  const metro = calcHRA({ basic, da, hraReceived, rentPaid, isMetro: true })
+  const nonMetro = calcHRA({ basic, da, hraReceived, rentPaid, isMetro: false })
+  const diff = metro.exemption - nonMetro.exemption
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">Compare FD Rates</h2>
-        <div className="flex items-center gap-2 mb-4">
-          <p className="text-xs text-gray-400">Indicative rates for {years}-year FD.</p>
-          <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-            Rates last checked: {RATES_LAST_UPDATED}
-          </span>
-        </div>
-        <p className="text-xs text-gray-400 mb-4">⚠️ Bank rates change frequently — always confirm the current rate on the bank's official site before booking.</p>
-        <SliderInput label="Principal Amount" value={principal} setValue={setPrincipal} min={10000} max={10000000} step={10000} />
-        <SliderInput label="Tenure" value={years} setValue={setYears} min={1} max={5} step={1} prefix="" suffix=" yrs" />
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-          <input type="checkbox" checked={isSenior} onChange={(e) => setIsSenior(e.target.checked)} className="accent-blue-600" />
-          Senior Citizen (60+ years)
-        </label>
+        <h2 className="font-bold text-gray-800 mb-4">Metro vs Non-Metro (Monthly Figures)</h2>
+        <p className="text-xs text-gray-400 mb-4">See how much more exemption you'd get if your city counted as metro rather than non-metro, for the same salary and rent.</p>
+        <SliderInput label="Basic Salary (monthly)" value={basic} setValue={setBasic} min={5000} max={500000} step={1000} />
+        <SliderInput label="Dearness Allowance (monthly)" value={da} setValue={setDa} min={0} max={200000} step={500} />
+        <SliderInput label="HRA Received (monthly)" value={hraReceived} setValue={setHraReceived} min={0} max={300000} step={500} />
+        <SliderInput label="Rent Paid (monthly)" value={rentPaid} setValue={setRentPaid} min={0} max={300000} step={500} />
       </div>
 
       <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
         <p className="text-sm text-green-700">
-          <span className="font-bold">Best rate: {best.name}</span> at {best.rate}% — maturity ₹{format(best.maturity)}, interest earned ₹{format(best.interest)}.
+          <span className="font-bold">Metro city gives ₹{format(diff)} more</span> exempt HRA per month than a non-metro city, for the same numbers.
         </p>
       </div>
 
       <div className="space-y-3 mb-6">
-        {withMaturity.map((bank, i) => (
-          <div key={bank.name} className={`bg-white rounded-2xl border p-4 shadow-sm ${i === 0 ? "border-green-300 bg-green-50" : "border-gray-100"}`}>
+        {[
+          { label: "Metro City", pct: "50%", data: metro, highlight: metro.exemption >= nonMetro.exemption },
+          { label: "Non-Metro City", pct: "40%", data: nonMetro, highlight: nonMetro.exemption > metro.exemption },
+        ].map((row) => (
+          <div key={row.label} className={`bg-white rounded-2xl border p-4 shadow-sm ${row.highlight ? "border-green-300 bg-green-50" : "border-gray-100"}`}>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{bank.logo}</span>
-                <div>
-                  <p className="font-bold text-gray-800 text-sm">{bank.name}</p>
-                  <p className="text-xs text-gray-400">{bank.note}</p>
-                </div>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">{row.label}</p>
+                <p className="text-xs text-gray-400">City limit: {row.pct} of Basic + DA</p>
               </div>
-              {i === 0 && <span className="text-xs font-semibold bg-green-600 text-white px-2 py-0.5 rounded-full">Highest</span>}
+              {row.highlight && <span className="text-xs font-semibold bg-green-600 text-white px-2 py-0.5 rounded-full">Higher Exemption</span>}
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Rate</p>
-                <p className="font-bold text-gray-800">{bank.rate}%</p>
+                <p className="text-xs text-gray-400">Exempt</p>
+                <p className="font-bold text-blue-600">₹{format(row.data.exemption)}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Maturity</p>
-                <p className="font-bold text-blue-600">₹{format(bank.maturity)}</p>
+                <p className="text-xs text-gray-400">Taxable</p>
+                <p className="font-bold text-amber-600">₹{format(row.data.taxable)}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Interest</p>
-                <p className="font-bold text-green-600">₹{format(bank.interest)}</p>
+                <p className="text-xs text-gray-400">City Limit</p>
+                <p className="font-bold text-gray-700">₹{format(row.data.componentB)}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 mb-6">*Small Finance Banks offer higher rates but carry more risk. DICGC insurance covers deposits up to ₹5 lakh per bank per depositor including interest.</p>
+      <p className="text-xs text-gray-400 mb-6">Only Delhi, Mumbai, Kolkata and Chennai count as metro for HRA purposes — other large cities like Bengaluru, Hyderabad and Pune are treated as non-metro.</p>
     </>
   )
 }
 
-/* ── Tab 3: FD vs Other Investments ── */
-function CompareInvestmentsTab() {
-  const [principal, setPrincipal] = useState(100000)
-  const [years, setYears] = useState(5)
+/* ── Tab 3: Old vs New Tax Regime ── */
+function RegimeTab() {
+  const [basic, setBasic] = useState(480000)
+  const [da, setDa] = useState(0)
+  const [hraReceived, setHraReceived] = useState(240000)
+  const [rentPaid, setRentPaid] = useState(216000)
+  const [isMetro, setIsMetro] = useState(true)
+  const [slab, setSlab] = useState(20)
 
-  const fdRate = 7.0
-  const ppfRate = 7.1
-  const nscRate = 7.7
-  const sipReturn = 12.0
-  const goldReturn = 8.0
-
-  const calcCI = (p, r, y) => p * Math.pow(1 + r / 100, y)
-  const calcSIP = (monthly, r, months) => {
-    const mr = r / 12 / 100
-    return monthly * ((Math.pow(1 + mr, months) - 1) / mr) * (1 + mr)
-  }
-
-  const monthlyEquivalent = principal / 12
-
-  const options = [
-    { name: "Bank FD", returns: calcCI(principal, fdRate, years), rate: fdRate, risk: "Very Low", taxable: true, lock: "Premature withdrawal allowed with penalty", icon: "🏦" },
-    { name: "PPF", returns: calcCI(principal, ppfRate, years), rate: ppfRate, risk: "Zero (Govt)", taxable: false, lock: "15 year lock-in, partial withdrawal after 7 years", icon: "🏛️" },
-    { name: "NSC", returns: calcCI(principal, nscRate, years), rate: nscRate, risk: "Zero (Govt)", taxable: true, lock: "5 year lock-in, no premature withdrawal", icon: "📮" },
-    { name: "SIP (Mutual Fund)*", returns: calcSIP(monthlyEquivalent, sipReturn, years * 12), rate: sipReturn, risk: "Medium-High", taxable: true, lock: "No lock-in (except ELSS — 3 years)", icon: "📈" },
-    { name: "Gold (approx)*", returns: calcCI(principal, goldReturn, years), rate: goldReturn, risk: "Medium", taxable: true, lock: "No lock-in for digital gold/ETF", icon: "🪙" },
-  ].sort((a, b) => b.returns - a.returns)
+  const { exemption } = calcHRA({ basic, da, hraReceived, rentPaid, isMetro })
+  const taxSaved = exemption * (slab / 100) * 1.04 // includes 4% cess
 
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-4">FD vs Other Investments</h2>
-        <div className="flex items-center gap-2 mb-2">
-          <p className="text-xs text-gray-400">Compare where ₹{format(principal)} grows more over {years} years.</p>
+        <h2 className="font-bold text-gray-800 mb-4">HRA Benefit: Old Regime Only</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <p className="text-xs text-gray-400">Annual figures. HRA exemption is available only under the old tax regime.</p>
           <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-            Rates last checked: {RATES_LAST_UPDATED}
+            Checked: {RATES_LAST_UPDATED}
           </span>
         </div>
-        <p className="text-xs text-gray-400 mb-4">SIP uses monthly equivalent of ₹{format(Math.round(monthlyEquivalent))}. PPF/NSC rates are set by the government each quarter — confirm the current rate before investing.</p>
-        <SliderInput label="Investment Amount" value={principal} setValue={setPrincipal} min={10000} max={1000000} step={10000} />
-        <SliderInput label="Time Period" value={years} setValue={setYears} min={1} max={15} step={1} prefix="" suffix=" yrs" />
+        <SliderInput label="Basic Salary (annual)" value={basic} setValue={setBasic} min={60000} max={6000000} step={5000} />
+        <SliderInput label="Dearness Allowance (annual)" value={da} setValue={setDa} min={0} max={2400000} step={5000} />
+        <SliderInput label="HRA Received (annual)" value={hraReceived} setValue={setHraReceived} min={0} max={3600000} step={5000} />
+        <SliderInput label="Rent Paid (annual)" value={rentPaid} setValue={setRentPaid} min={0} max={3600000} step={5000} />
+
+        <div className="mb-5">
+          <label className="text-sm font-semibold text-gray-700 block mb-2">City Type</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setIsMetro(true)}
+              className={"px-3 py-2 rounded-lg text-sm font-semibold transition " + (isMetro ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+              Metro
+            </button>
+            <button type="button" onClick={() => setIsMetro(false)}
+              className={"px-3 py-2 rounded-lg text-sm font-semibold transition " + (!isMetro ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+              Non-Metro
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-1">
+          <label className="text-sm font-semibold text-gray-700 block mb-2">Your Income Tax Slab (Old Regime)</label>
+          <div className="grid grid-cols-4 gap-2">
+            {[5, 20, 30].map((s) => (
+              <button key={s} type="button" onClick={() => setSlab(s)}
+                className={"px-3 py-2 rounded-lg text-sm font-semibold transition " + (slab === s ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+                {s}%
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-3 mb-6">
-        {options.map((opt, i) => (
-          <div key={opt.name} className={`bg-white rounded-2xl border p-4 shadow-sm ${i === 0 ? "border-blue-300 bg-blue-50" : "border-gray-100"}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{opt.icon}</span>
-                <div>
-                  <p className="font-bold text-gray-800 text-sm">{opt.name}</p>
-                  <p className="text-xs text-gray-400">Risk: {opt.risk} | {opt.taxable ? "Interest taxable" : "Tax-free returns"}</p>
-                </div>
-              </div>
-              {i === 0 && <span className="text-xs font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full">Best Return</span>}
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Rate</p>
-                <p className="font-bold text-gray-800">{opt.rate}%</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Maturity</p>
-                <p className="font-bold text-blue-600">₹{format(opt.returns)}</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-400">Gain</p>
-                <p className="font-bold text-green-600">₹{format(opt.returns - principal)}</p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">🔒 {opt.lock}</p>
-          </div>
-        ))}
+      <div className="bg-blue-600 rounded-2xl p-6 text-white mb-6">
+        <p className="text-blue-100 text-sm mb-1">Estimated Tax Saved by Claiming HRA</p>
+        <p className="text-4xl font-bold mb-1">₹{format(taxSaved)}</p>
+        <p className="text-blue-200 text-sm">On ₹{format(exemption)} of exempt HRA, at your {slab}% slab plus 4% cess — old regime only.</p>
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-        <p className="text-sm font-semibold text-amber-700 mb-2">⚠️ Important Notes</p>
+        <p className="text-sm font-semibold text-amber-700 mb-2">⚠️ Old vs New Regime</p>
         <div className="space-y-1 text-xs text-gray-600">
-          <p>*SIP returns are estimated at 12% historical average — actual returns vary and are not guaranteed.</p>
-          <p>*Gold returns estimated at 8% long-term average — actual prices fluctuate significantly.</p>
-          <p>FD, PPF, NSC returns are guaranteed. Mutual fund and gold returns are market-linked.</p>
+          <p>Old regime: HRA exemption available, along with deductions like 80C, 80D, and home loan interest.</p>
+          <p>New regime (default since FY 2023-24): HRA exemption is not available, but slab rates are lower and a standard deduction still applies.</p>
+          <p>Compare your total tax under both regimes before deciding — a high HRA exemption often tilts the choice toward the old regime, but not always.</p>
         </div>
       </div>
     </>
@@ -302,15 +295,15 @@ function CompareInvestmentsTab() {
 function FaqSection() {
   const [open, setOpen] = useState(null)
   const faqs = [
-    { q: "Is FD interest taxable in India?", a: "Yes. FD interest is fully taxable as 'Income from Other Sources' at your income tax slab rate. From FY 2025-26, banks deduct TDS at 10% if annual interest exceeds ₹50,000 (₹1,00,000 for senior citizens), following the Budget 2025 increase in these thresholds. If your total income is below the taxable limit, submit Form 15G (or 15H for seniors) to avoid TDS." },
-    { q: "What is the maximum FD amount insured in India?", a: "DICGC (Deposit Insurance and Credit Guarantee Corporation) insures bank deposits up to ₹5 lakh per depositor per bank — including both principal and interest. This covers savings, FD, RD, and current accounts combined. For amounts above ₹5 lakh, consider spreading across multiple banks." },
-    { q: "Can I break my FD before maturity?", a: "Yes, most banks allow premature FD withdrawal. Banks typically charge a penalty of 0.5% to 1% on the applicable interest rate. For example, if the 3-year rate is 7% and you withdraw in year 2, the bank may pay the 2-year rate (say 6.75%) minus the penalty — resulting in 5.75% to 6.25%." },
-    { q: "What is the difference between cumulative and non-cumulative FD?", a: "Cumulative FD: Interest compounds and is paid at maturity along with principal. Better for wealth building as you get compound interest benefit. Non-cumulative FD: Interest is paid at regular intervals (monthly, quarterly, half-yearly). Better if you need regular income, like for retired people." },
-    { q: "Should I invest in FD or SIP?", a: "FD gives guaranteed returns (6.5-8%), zero risk, and is ideal for short-term goals or emergency funds. SIP in mutual funds can give 10-14% over long term but with market risk. Ideal strategy: keep 3-6 months emergency fund in FD, invest surplus in SIP for long-term goals above 5 years." },
-    { q: "Do senior citizens get higher FD rates?", a: "Yes. All major banks offer 0.25% to 0.75% extra interest rate for senior citizens (age 60+) on FDs. Some banks offer even higher rates for super senior citizens (age 80+). Post Office deposits give same rate regardless of age." },
-    { q: "What is Tax Saver FD?", a: "Tax Saver FD is a 5-year fixed deposit that qualifies for deduction under Section 80C up to ₹1.5 lakh. The lock-in period is mandatory 5 years — premature withdrawal is not allowed. Interest earned is taxable. It's useful if you've exhausted other 80C options like PF and PPF." },
-    { q: "Which is safer — bank FD or post office FD?", a: "Post Office FD is backed by the Government of India making it 100% safe with no limit on insurance. Bank FDs are insured by DICGC up to ₹5 lakh only. Post Office FD rates are also competitive (7.5% for 5-year). For amounts above ₹5 lakh, Post Office FD is considered safer." },
-    { q: "What is the current TDS threshold on FD interest?", a: "From FY 2025-26 (effective 1 April 2025), banks deduct 10% TDS on FD interest once it crosses ₹50,000 per bank per year for individuals below 60, and ₹1,00,000 per bank per year for senior citizens (60+). Without a valid PAN on file, the TDS rate rises to 20%. Not receiving TDS doesn't mean the interest is tax-free — you must still report it in your ITR." },
+    { q: "What is HRA exemption under Section 10(13A)?", a: "House Rent Allowance (HRA) is part of your salary paid by your employer to help cover rent. Under Section 10(13A) of the Income Tax Act, a portion of it is exempt from tax — the exemption is the lowest of: actual HRA received, 50% (metro) or 40% (non-metro) of Basic + DA, or rent paid minus 10% of Basic + DA. The rest is added to your taxable income." },
+    { q: "Which cities count as metro for HRA?", a: "For HRA purposes, only Delhi, Mumbai, Kolkata, and Chennai are treated as metro cities, giving a 50% limit. Every other city — including Bengaluru, Hyderabad, Pune, Ahmedabad, and Gurugram — is treated as non-metro, with a 40% limit." },
+    { q: "Is HRA exemption available under the new tax regime?", a: "No. HRA exemption under Section 10(13A) is available only under the old tax regime. If you opt for the new tax regime (the default since FY 2023-24), your entire HRA is taxable, though you still get lower slab rates and a standard deduction." },
+    { q: "Can I claim HRA exemption if I pay rent to my parents?", a: "Yes, this is allowed as long as it's a genuine arrangement — you actually pay rent, ideally by bank transfer, and your parents declare it as rental income in their tax return. You cannot claim HRA if you pay rent to your spouse, or if you own the house you live in." },
+    { q: "What documents do I need to claim HRA?", a: "You typically need a rent receipt or rent agreement, and if annual rent exceeds ₹1,00,000, your landlord's PAN as well. Submit these to your employer during the year so HRA exemption is factored into your TDS, or claim it directly while filing your ITR." },
+    { q: "What if my salary doesn't include an HRA component but I pay rent?", a: "If you don't receive HRA but pay rent — common for self-employed people or salaried employees without an HRA component — you can claim a deduction under Section 80GG instead, subject to its own limits (lowest of ₹5,000/month, 25% of total income, or rent minus 10% of total income)." },
+    { q: "Can I claim both HRA exemption and home loan interest deduction?", a: "Yes, if the house you own is in a different city from where you live and work on rent, you can claim HRA exemption for the rented home and home loan interest deduction (Section 24) for the owned property, subject to the usual conditions." },
+    { q: "What happens if my landlord doesn't have a PAN?", a: "If annual rent exceeds ₹1,00,000 and your landlord doesn't have a PAN, you can still claim HRA by submitting a declaration from the landlord stating they don't have a PAN, along with their name and address, though some employers may ask for additional proof." },
+    { q: "Does DA (Dearness Allowance) count toward the HRA calculation?", a: "Yes, if your DA forms part of retirement benefits (common for government employees), it's included along with Basic Salary for computing the 40%/50% limit and the 10% rent threshold. For most private-sector employees, DA is usually zero or not applicable." },
   ]
 
   return (
@@ -341,10 +334,10 @@ function FaqSchema() {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: [
-      { "@type": "Question", name: "Is FD interest taxable in India?", acceptedAnswer: { "@type": "Answer", text: "Yes. FD interest is taxable at your income slab rate. From FY 2025-26, banks deduct TDS at 10% if interest exceeds ₹50,000 per year (₹1,00,000 for senior citizens)." } },
-      { "@type": "Question", name: "What is the maximum FD amount insured in India?", acceptedAnswer: { "@type": "Answer", text: "DICGC insures up to ₹5 lakh per depositor per bank including principal and interest. For amounts above ₹5 lakh, spread across multiple banks." } },
-      { "@type": "Question", name: "Should I invest in FD or SIP?", acceptedAnswer: { "@type": "Answer", text: "FD for short-term and emergency fund (guaranteed returns). SIP for long-term wealth building (higher returns but market risk). Ideal: 3-6 months in FD, rest in SIP." } },
-      { "@type": "Question", name: "What is the current TDS threshold on FD interest?", acceptedAnswer: { "@type": "Answer", text: "From FY 2025-26, TDS applies above ₹50,000 per bank per year for individuals below 60, and above ₹1,00,000 for senior citizens, at a 10% rate with valid PAN." } },
+      { "@type": "Question", name: "What is HRA exemption under Section 10(13A)?", acceptedAnswer: { "@type": "Answer", text: "HRA exemption is the lowest of: actual HRA received, 50% (metro) or 40% (non-metro) of Basic + DA, or rent paid minus 10% of Basic + DA. The rest of the HRA received is taxable." } },
+      { "@type": "Question", name: "Which cities count as metro for HRA?", acceptedAnswer: { "@type": "Answer", text: "Only Delhi, Mumbai, Kolkata, and Chennai count as metro cities for HRA, giving a 50% limit. All other cities use the 40% non-metro limit." } },
+      { "@type": "Question", name: "Is HRA exemption available under the new tax regime?", acceptedAnswer: { "@type": "Answer", text: "No, HRA exemption is available only under the old tax regime. Under the new tax regime, HRA received is fully taxable." } },
+      { "@type": "Question", name: "What if my salary doesn't include HRA but I pay rent?", acceptedAnswer: { "@type": "Answer", text: "You can claim a deduction under Section 80GG instead, subject to a limit of the lowest of ₹5,000/month, 25% of total income, or rent minus 10% of total income." } },
     ]
   }
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
@@ -353,23 +346,23 @@ function FaqSchema() {
 function SeoContent() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Complete FD Guide for India</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Complete HRA Guide for India</h2>
       <div className="space-y-4 text-sm text-gray-500 leading-relaxed">
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">What is a Fixed Deposit?</h3>
-          <p>A Fixed Deposit (FD) is a financial instrument offered by banks and post offices where you deposit a lump sum for a fixed period at a predetermined interest rate. It is one of the safest investment options in India, offering guaranteed returns regardless of market conditions.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">What is House Rent Allowance?</h3>
+          <p>House Rent Allowance (HRA) is a component of salary that employers pay to help employees cover rented accommodation. A part of it can be claimed as tax-exempt under Section 10(13A) of the Income Tax Act, provided the employee actually lives in rented housing and pays rent.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">How is FD interest calculated?</h3>
-          <p>FD interest is calculated using compound interest: Maturity = P × (1 + r/n)^(n×t), where P is principal, r is annual rate, n is compounding frequency per year, and t is tenure in years. Quarterly compounding gives slightly higher returns than annual compounding at the same rate.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">How is HRA exemption calculated?</h3>
+          <p>The exempt portion is the lowest of three amounts: the actual HRA received from your employer, 50% of Basic + DA for a metro city (40% for non-metro), and the rent you actually pay minus 10% of Basic + DA. Whatever HRA remains after this exemption is added to your taxable salary.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">FD interest rates in India</h3>
-          <p>FD rates vary by bank and tenure and change every few months — the rates shown in the Compare Banks tab above are indicative and were last checked in {RATES_LAST_UPDATED}. Always confirm the current rate on the bank's official website before booking. Government banks, private banks, and Small Finance Banks typically offer different rate bands, with Small Finance Banks offering higher rates at higher risk.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">Metro vs non-metro cities</h3>
+          <p>Only Delhi, Mumbai, Kolkata, and Chennai are classified as metro cities for HRA purposes, which raises the salary-based limit to 50%. Every other city in India — regardless of size — is treated as non-metro with a 40% limit, shown in the Compare tab above.</p>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">Tax on FD interest — what you need to know</h3>
-          <p>FD interest is added to your total income and taxed at your applicable slab rate. If you are in the 30% bracket, you pay 30% tax on FD interest. From FY 2025-26, banks deduct TDS once interest crosses ₹50,000 per bank per year (₹1,00,000 for senior citizens). To avoid TDS deduction when your total income is below the taxable limit, submit Form 15G (below 60 years) or Form 15H (senior citizens) at the start of each financial year.</p>
+          <h3 className="font-semibold text-gray-800 mb-1">Tax regime matters for HRA</h3>
+          <p>HRA exemption is only available if you choose the old tax regime while filing your return or declaring investments to your employer. Under the new tax regime, which is now the default, the full HRA amount is taxable, so compare your total tax liability under both regimes — factoring in HRA, 80C, and other deductions — before choosing. Thresholds and slab figures here were last checked in {RATES_LAST_UPDATED}; confirm current rules on the Income Tax Department's website before filing.</p>
         </div>
       </div>
     </div>
@@ -378,26 +371,26 @@ function SeoContent() {
 
 /* ── Main Export ── */
 const TABS = [
-  { id: "fd", label: "FD Calculator" },
-  { id: "banks", label: "Compare Banks" },
-  { id: "compare", label: "FD vs SIP vs PPF" },
+  { id: "hra", label: "HRA Calculator" },
+  { id: "city", label: "Metro vs Non-Metro" },
+  { id: "regime", label: "Tax Saving" },
 ]
 
-export default function FDCalculator() {
-  const [tab, setTab] = useState("fd")
+export default function HRACalculator() {
+  const [tab, setTab] = useState("hra")
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <Helmet>
-        <title>FD Calculator India — Fixed Deposit, Bank Rates, FD vs SIP | WebExt.in</title>
-        <meta name="description" content="Free FD calculator India. Calculate fixed deposit maturity, compare bank rates (SBI, HDFC, ICICI), senior citizen rates, and compare FD vs SIP vs PPF. Instant results." />
+        <title>HRA Calculator India — House Rent Allowance Exemption | WebExt.in</title>
+        <meta name="description" content="Free HRA calculator India. Calculate House Rent Allowance tax exemption under Section 10(13A), compare metro vs non-metro limits, and see how much tax you save. Instant results." />
       </Helmet>
       <FaqSchema />
 
       <div className="max-w-2xl mx-auto">
         <a href="/" className="text-blue-600 text-sm mb-6 inline-block hover:underline">← Back to all tools</a>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">FD Calculator India</h1>
-        <p className="text-gray-500 mb-6">Calculate FD maturity, compare bank rates, and see how FD compares to SIP and PPF.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">HRA Calculator India</h1>
+        <p className="text-gray-500 mb-6">Calculate your HRA tax exemption, compare metro vs non-metro city limits, and estimate the tax you save.</p>
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {TABS.map((t) => (
@@ -408,9 +401,9 @@ export default function FDCalculator() {
           ))}
         </div>
 
-        {tab === "fd" && <FDTab />}
-        {tab === "banks" && <CompareBanksTab />}
-        {tab === "compare" && <CompareInvestmentsTab />}
+        {tab === "hra" && <HRATab />}
+        {tab === "city" && <CompareCityTab />}
+        {tab === "regime" && <RegimeTab />}
 
         <FaqSection />
         <SeoContent />
