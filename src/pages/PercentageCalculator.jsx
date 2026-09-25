@@ -2,12 +2,12 @@ import { useState } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router-dom"
 import {
-  PercentOfNumber,
-  WhatPercent,
   AddPercent,
-  RemovePercent,
   FaqAccordion,
   FaqSchema,
+  PercentOfNumber,
+  RemovePercent,
+  WhatPercent,
 } from "./PercentageShared"
 
 const FAQS = [
@@ -123,10 +123,17 @@ function SeoContent() {
 export default function PercentageCalculator() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <Helmet>
-        <title>Percentage Calculator India — GST, Discount, Marks, Increase | WebExt.in</title>
-        <meta name="description" content="Free percentage calculator India. Calculate X% of Y, percentage increase/decrease, GST, discount, marks percentage, and more. Instant results. No signup needed." />
-      </Helmet>
+     <Helmet>
+  <title>Percentage Calculator India — GST, Discount, Marks, Increase | WebExt.in</title>
+  <meta
+    name="description"
+    content="Free percentage calculator India. Calculate X% of Y, percentage increase/decrease, GST, discount, marks percentage, and more. Instant results. No signup needed."
+  />
+  <link
+    rel="canonical"
+    href="https://www.webext.in/percentage-calculator"
+  />
+</Helmet>
       <FaqSchema faqs={FAQS} />
 
       <div className="max-w-2xl mx-auto">

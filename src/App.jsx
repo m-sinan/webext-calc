@@ -15,15 +15,11 @@ import PercentageIncreaseCalculator from "./pages/PercentageIncreaseCalculator";
 import MarksCalculator from "./pages/MarksCalculator";
 import BlogHome from "./pages/blog/BlogHome";
 import BlogPost from "./pages/blog/BlogPost";
-import { Helmet } from "react-helmet-async";
 import ScrollToTop from "./components/ScrollToTop";
 
 function Home() {
   return (
     <div className="min-h-screen bg-white">
-      <Helmet>
-        <link rel="canonical" href="https://webext.in/" />
-      </Helmet>
       <Navbar />
       <Hero />
       <Tools />
