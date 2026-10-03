@@ -12,12 +12,8 @@ export default function Hero() {
         <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
           Free Finance Tools for Indians
         </span>
-        {/* <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
           Know Your Numbers <br />
-          <span className="text-blue-600">Before You Decide</span>
-        </h1> */}
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
-          I LOVE YOU HIBOOOOS <br />
           <span className="text-blue-600">Before You Decide</span>
         </h1>
         <p className="text-lg text-gray-500 max-w-xl mx-auto mb-8">
