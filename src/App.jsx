@@ -57,23 +57,11 @@ export default function App() {
           <Route path="/salary-calculator" element={<SalaryCalculator />} />
           <Route path="/hra-calculator" element={<HRACalculator />} />
           <Route path="/fd-calculator" element={<FDCalculator />} />
-          <Route
-            path="/percentage-calculator"
-            element={<PercentageCalculator />}
-          />
-          <Route
-            path="/discount-calculator"
-            element={<DiscountCalculator />}
-          />
+          <Route path="/percentage-calculator" element={<PercentageCalculator />} />
+          <Route path="/discount-calculator" element={<DiscountCalculator />} />
           <Route path="/gst-calculator" element={<GSTCalculator />} />
-          <Route
-            path="/percentage-increase-calculator"
-            element={<PercentageIncreaseCalculator />}
-          />
-          <Route
-            path="/marks-percentage-calculator"
-            element={<MarksCalculator />}
-          />
+          <Route path="/percentage-increase-calculator" element={<PercentageIncreaseCalculator />} />
+          <Route path="/marks-percentage-calculator" element={<MarksCalculator />} />
           <Route path="/blog" element={<BlogHome />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
         </Route>

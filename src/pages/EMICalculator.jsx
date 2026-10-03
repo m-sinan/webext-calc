@@ -199,7 +199,7 @@ Total Payment: ₹${formatL(totalPayment)}`
           ].map((r) => (
             <div key={r.label} className="bg-blue-700 rounded-xl p-3">
               <p className="text-blue-200 text-xs mb-1">{r.label}</p>
-              <p className="text-white font-bold">₹{r.value}</p>
+              <p className="text-white font-bold">{r.value}</p>
             </div>
           ))}
         </div>
