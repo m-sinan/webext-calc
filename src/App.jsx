@@ -37,6 +37,8 @@ function Home() {
   return (
     <>
       <Helmet>
+        <title>Free Online Calculators India — EMI, Salary, HRA, FD, GST | WebExt.in</title>
+        <meta name="description" content="Free calculators for India: EMI, in-hand salary, HRA exemption, FD returns, GST, percentage and marks. Instant results, no sign-up." />
         <link rel="canonical" href="https://www.webext.in/" />
       </Helmet>
       <Hero />
@@ -46,9 +48,12 @@ function Home() {
   );
 }
 
-export default function App() {
+// Routes + scroll handling, without a router around them. The browser
+// entry wraps this in <BrowserRouter>; the build-time prerender wraps it
+// in <StaticRouter> so both render exactly the same tree.
+export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
@@ -66,6 +71,14 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
         </Route>
       </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

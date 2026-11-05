@@ -368,6 +368,7 @@ export default function FDCalculator() {
       <Helmet>
         <title>FD Calculator India 2025 — Fixed Deposit, Bank Rates, FD vs SIP | WebExt.in</title>
         <meta name="description" content="Free FD calculator India. Calculate fixed deposit maturity, compare bank rates (SBI, HDFC, ICICI), senior citizen rates, and compare FD vs SIP vs PPF. Instant results 2025." />
+        <link rel="canonical" href="https://www.webext.in/fd-calculator" />
       </Helmet>
       <FaqSchema />
 

@@ -384,6 +384,7 @@ export default function HRACalculator() {
       <Helmet>
         <title>HRA Calculator India — House Rent Allowance Exemption | WebExt.in</title>
         <meta name="description" content="Free HRA calculator India. Calculate House Rent Allowance tax exemption under Section 10(13A), compare metro vs non-metro limits, and see how much tax you save. Instant results." />
+        <link rel="canonical" href="https://www.webext.in/hra-calculator" />
       </Helmet>
       <FaqSchema />
 

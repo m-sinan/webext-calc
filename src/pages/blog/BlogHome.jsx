@@ -15,7 +15,7 @@ export default function BlogHome() {
       <Helmet>
         <title>Finance Blog India — EMI, Salary, Investment Tips | WebExt.in</title>
         <meta name="description" content="Free finance articles for India. Learn about home loan EMI, in-hand salary, FD vs SIP, HRA exemption and more. Simple, practical money advice for Indians." />
-        <link rel="canonical" href="https://webext.in/blog" />
+        <link rel="canonical" href="https://www.webext.in/blog" />
       </Helmet>
 
       <div className="max-w-3xl mx-auto">

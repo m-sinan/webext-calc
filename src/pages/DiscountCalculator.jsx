@@ -16,6 +16,7 @@ export default function DiscountCalculator() {
       <Helmet>
         <title>Discount Calculator — Find Sale Price & Savings Instantly | WebExt.in</title>
         <meta name="description" content="Free online discount calculator. Enter the original price and discount percentage to instantly see the final price and how much you save. No signup needed." />
+        <link rel="canonical" href="https://www.webext.in/discount-calculator" />
       </Helmet>
       <FaqSchema faqs={FAQS} />
 

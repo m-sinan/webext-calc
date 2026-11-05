@@ -16,6 +16,7 @@ export default function MarksCalculator() {
       <Helmet>
         <title>Marks Percentage Calculator — Get % and Grade Instantly | WebExt.in</title>
         <meta name="description" content="Free marks percentage calculator. Enter marks obtained and total marks to instantly see your percentage and grade. No signup needed." />
+        <link rel="canonical" href="https://www.webext.in/marks-percentage-calculator" />
       </Helmet>
       <FaqSchema faqs={FAQS} />
 

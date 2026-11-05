@@ -16,6 +16,7 @@ export default function GSTCalculator() {
       <Helmet>
         <title>GST Calculator — Add or Remove GST Instantly (5%, 12%, 18%, 28%) | WebExt.in</title>
         <meta name="description" content="Free GST calculator for India. Add GST to a base price or remove GST from an inclusive price at 5%, 12%, 18%, or 28% rates. Instant results, no signup needed." />
+        <link rel="canonical" href="https://www.webext.in/gst-calculator" />
       </Helmet>
       <FaqSchema faqs={FAQS} />
 

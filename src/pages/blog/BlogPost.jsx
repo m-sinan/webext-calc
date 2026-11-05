@@ -1,14 +1,18 @@
 import { useParams, Link } from "react-router-dom"
 import { Helmet } from "react-helmet-async"
 import { posts } from "./posts/index"
+import { post as emiPost } from "./posts/emi-for-30-lakh-home-loan"
+import { post as salaryPost } from "./posts/inhand-salary-6-lpa-bangalore"
+import { post as fdSipPost } from "./posts/fd-vs-sip-3-years"
 
-const postModules = {
-  "emi-for-30-lakh-home-loan": () => import("./posts/emi-for-30-lakh-home-loan"),
-  "inhand-salary-6-lpa-bangalore": () => import("./posts/inhand-salary-6-lpa-bangalore"),
-  "fd-vs-sip-3-years": () => import("./posts/fd-vs-sip-3-years"),
+// Posts are imported directly (not lazily) so their text is part of the
+// prerendered HTML that Google receives, instead of appearing after a
+// delayed JavaScript load.
+const postsBySlug = {
+  [emiPost.slug]: emiPost,
+  [salaryPost.slug]: salaryPost,
+  [fdSipPost.slug]: fdSipPost,
 }
-
-import { useState, useEffect } from "react"
 
 const categoryColors = {
   "Home Loan": "bg-blue-100 text-blue-700",
@@ -99,27 +103,8 @@ function renderTable(content) {
 
 export default function BlogPost() {
   const { slug } = useParams()
-  const [post, setPost] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const post = postsBySlug[slug]
   const meta = posts.find(p => p.slug === slug)
-
-  useEffect(() => {
-    const loader = postModules[slug]
-    if (loader) {
-      loader().then(mod => {
-        setPost(mod.post)
-        setLoading(false)
-      })
-    } else {
-      setLoading(false)
-    }
-  }, [slug])
-
-  if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p className="text-gray-400">Loading...</p>
-    </div>
-  )
 
   if (!post) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -148,9 +133,9 @@ export default function BlogPost() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <Helmet>
-        <title>{post.title} | WebExt.in</title>
+        <title>{`${post.title} | WebExt.in`}</title>
         <meta name="description" content={post.description} />
-        <link rel="canonical" href={`https://webext.in/blog/${post.slug}`} />
+        <link rel="canonical" href={`https://www.webext.in/blog/${post.slug}`} />
       </Helmet>
 
       <div className="max-w-3xl mx-auto">
