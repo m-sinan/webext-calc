@@ -20,7 +20,14 @@ const routes = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
 
 // React 19 puts <title>, <meta> and <link> into the render output. Pull
 // them out so they can be placed in <head> instead of the body.
-const HEAD_TAG = /<title>[\s\S]*?<\/title>|<meta\b[^>]*>|<link\b[^>]*rel="canonical"[^>]*>|<script type="application\/ld\+json">[\s\S]*?<\/script>/g
+// JSON-LD <script> tags are deliberately NOT moved: pages render them in the
+// body (e.g. FaqSchema), and moving them would break hydration.
+const HEAD_TAG = /<title>[\s\S]*?<\/title>|<meta\b[^>]*>|<link\b[^>]*rel="canonical"[^>]*>/g
+
+// Neutral, un-prerendered shell. vercel.json rewrites unknown URLs to this
+// file, so a URL that has no prerendered page never receives another
+// page's HTML (dist/index.html is the prerendered homepage).
+fs.writeFileSync(path.join(distDir, "app-shell.html"), template)
 
 let failed = 0
 for (const route of routes) {
