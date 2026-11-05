@@ -46,9 +46,12 @@ function Home() {
   );
 }
 
-export default function App() {
+// Routes + scroll handling, without a router around them. The browser
+// entry wraps this in <BrowserRouter>; the build-time prerender wraps it
+// in <StaticRouter> so both render exactly the same tree.
+export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
@@ -66,6 +69,14 @@ export default function App() {
           <Route path="/blog/:slug" element={<BlogPost />} />
         </Route>
       </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }
