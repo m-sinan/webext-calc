@@ -16,6 +16,7 @@ export default function PercentageIncreaseCalculator() {
       <Helmet>
         <title>Percentage Increase / Decrease Calculator — Instant % Change | WebExt.in</title>
         <meta name="description" content="Free percentage increase and decrease calculator. Enter the original and new value to instantly see the % change — useful for salary hikes, price changes, and more." />
+        <link rel="canonical" href="https://www.webext.in/percentage-increase-calculator" />
       </Helmet>
       <FaqSchema faqs={FAQS} />
 

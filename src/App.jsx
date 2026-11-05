@@ -37,6 +37,8 @@ function Home() {
   return (
     <>
       <Helmet>
+        <title>Free Online Calculators India — EMI, Salary, HRA, FD, GST | WebExt.in</title>
+        <meta name="description" content="Free calculators for India: EMI, in-hand salary, HRA exemption, FD returns, GST, percentage and marks. Instant results, no sign-up." />
         <link rel="canonical" href="https://www.webext.in/" />
       </Helmet>
       <Hero />

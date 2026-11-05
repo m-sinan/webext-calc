@@ -135,7 +135,7 @@ export default function BlogPost() {
       <Helmet>
         <title>{`${post.title} | WebExt.in`}</title>
         <meta name="description" content={post.description} />
-        <link rel="canonical" href={`https://webext.in/blog/${post.slug}`} />
+        <link rel="canonical" href={`https://www.webext.in/blog/${post.slug}`} />
       </Helmet>
 
       <div className="max-w-3xl mx-auto">
